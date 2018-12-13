@@ -58,11 +58,11 @@ public class TableLine
 
     public String getDecimalRepresentation()
     {
-        String decimals = "{ " + mintermsAsDecimal[0];
+        String decimals = "{ " + MintermTable.decryptDontCareIfEncrypted(mintermsAsDecimal[0]);
 
         for (int i = 1; i < mintermsAsDecimal.length; i++)
         {
-            decimals += ", " + mintermsAsDecimal[i];
+            decimals += ", " + MintermTable.decryptDontCareIfEncrypted(mintermsAsDecimal[i]);
         }
 
         decimals += " }";

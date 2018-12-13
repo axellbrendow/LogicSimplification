@@ -30,6 +30,21 @@ public class MintermTable
         return isPossibleToSimplify;
     }
     
+    protected static int encryptDontCare(int mintermAsDecimal)
+    {
+        return -mintermAsDecimal - 1;
+    }
+    
+    protected static int decryptDontCare(int encryptedDontCare)
+    {
+        return encryptDontCare(encryptedDontCare);
+    }
+    
+    protected static int decryptDontCareIfEncrypted(int dontCare)
+    {
+        return ( dontCare >= 0 ? dontCare : decryptDontCare(dontCare) );
+    }
+    
     /**
      * Percorre a tabela verdade coletando os numeros inteiros equivalentes a cada
      * mintermo.
@@ -46,10 +61,13 @@ public class MintermTable
     {
         int length = truthTable.length();
         int numberOfMinterms = 0;
+        char c;
         
         for (int i = 0; i < length; i++)
         {
-            numberOfMinterms += ( truthTable.charAt(i) == '1' ? 1 : 0 );
+            c = truthTable.charAt(i);
+            
+            numberOfMinterms += ( c == '1' || c == 'x' ? 1 : 0 );
         }
         
         int[] minterms = new int[numberOfMinterms];
@@ -57,9 +75,20 @@ public class MintermTable
         
         for (int i = 0; i < length; i++)
         {
-            if (truthTable.charAt(i) == '1')
+            c = truthTable.charAt(i);
+            
+            switch (c)
             {
-                minterms[ mintermsCounter++ ] = i;
+                case '1':
+                    minterms[ mintermsCounter++ ] = i;
+                    break;
+                    
+                case 'x': 
+                    minterms[ mintermsCounter++ ] = encryptDontCare(i);
+                    break;
+                    
+                default:
+                    break;
             }
         }
         
@@ -99,308 +128,20 @@ public class MintermTable
         
         int[] minterms = getMintermsAsDecimal(truthTable);
         MintermTable mintermsTable = new MintermTable(minterms.length);
+        int minterm;
         
         for (int i = 0; i < minterms.length; i++)
         {
+            minterm = minterms[i];
+            
             mintermsTable.addLine
             (
-                new int[] { minterms[i] },
-                MATH.decimalToBinary(minterms[i], numberOfVariables)
+                new int[] { minterm },
+                MATH.decimalToBinary(decryptDontCareIfEncrypted(minterm), numberOfVariables)
             );
         }
         
         return mintermsTable;
-    }
-    
-    /**
-     * De acordo com a quantidade de variaveis da funcao logica, descobre qual
-     * e' a maior quantidade de grupos que podem ser formados entre mintermos
-     * com i e i + 1 bits ligados em 1 com i indo de 0 a quantidade de variaveis - 1.
-     * 
-     * @param oldMintermTable antiga tabela de mintermos
-     * 
-     * @return A maior quantidade de grupos que podem ser formados entre mintermos
-     * com i e i + 1 bits ligados em 1 com i indo de 0 a quantidade de variaveis - 1.
-     */
-    
-    private static int getMaxSizeOfNewMintermTable(MintermTable oldMintermTable)
-    {
-        int maxSize = 1;
-        
-        if (oldMintermTable != null && oldMintermTable.numberOfLines > 0)
-        {
-            int previousGroupSize = 1; // tamanho do grupo de numeros com 0 "ums"
-            int currentGroupSize;
-            int numberOfVariables = oldMintermTable.table[0].mintermAsBinary.length;
-
-            for (int i = 0; i < numberOfVariables; i++)
-            {
-                // tamanho do grupo de numeros com i + 1 "ums"
-                currentGroupSize = MATH.combinationOf(numberOfVariables, i + 1);
-                maxSize += previousGroupSize * currentGroupSize;
-                previousGroupSize = currentGroupSize;
-            }
-        }
-        
-        return maxSize;
-    }/*
-    
-    public static MintermTable removeGroupsThatAllMintermsWereUsed(MintermTable oldMintermTable)
-    {
-        MintermTable definitiveTable = oldMintermTable;
-        
-        if (oldMintermTable != null && oldMintermTable.numberOfLines > 0)
-        {
-            TableLine[] oldTable = oldMintermTable.table;
-            int oldTableLength = oldMintermTable.numberOfLines;
-            TableLine tableLine;
-            MintermTable newMintermTable = new MintermTable(oldTableLength);
-            
-            boolean found;
-            int[] mintermsAsDecimal;
-            
-            for (int i = oldTableLength - 1; i > -1; i--)
-            {
-                tableLine = oldTable[i];
-                mintermsAsDecimal = tableLine.mintermsAsDecimal;
-                
-                if (mintermsAsDecimal[0] != -1)
-                {
-                    found = ( oldMintermTable.indexesOf(mintermsAsDecimal[0]).length > 1 );
-
-                    // percorre os mintermos do grupo checando se eles existem em outros grupos
-                    for (int j = 1; found && j < mintermsAsDecimal.length; j++)
-                    {
-                        found = ( oldMintermTable.indexesOf(mintermsAsDecimal[j]).length > 1 );
-                    }
-
-                    // checa se algum mintermo do grupo nao foi encontrado em outro lugar
-                    if (!found)
-                    {
-                        newMintermTable.addLine(mintermsAsDecimal, tableLine.mintermAsBinary);
-                    }
-
-                    else // se todos foram encontrados,
-                    {
-                        // apaga o grupo na tabela antiga
-                        Arrays.fill(mintermsAsDecimal, -1);
-                    }
-                }
-            }
-            
-            int numberOfLines = newMintermTable.numberOfLines;
-            definitiveTable = new MintermTable(numberOfLines);
-            definitiveTable.isPossibleToSimplify = oldMintermTable.isPossibleToSimplify;
-            
-            for (int i = 0; i < numberOfLines; i++)
-            {
-                tableLine = newMintermTable.table[numberOfLines - 1 - i];
-                
-                definitiveTable.addLine(tableLine.mintermsAsDecimal, tableLine.mintermAsBinary);
-            }
-        }
-        
-        return definitiveTable;
-    }*/
-    
-    /**
-     * Percorre a tabela procurando simplificacoes iguais e deixa apenas uma copia.
-     * 
-     * @param oldMintermTable tabela de mintermos gerada pelo metodo groupMinterms
-     * 
-     * @return Nova {@code MintermTable} sem simplificacoes duplicadas.
-     */
-    
-    public static MintermTable removeDuplicatedGroups(MintermTable oldMintermTable)
-    {
-        MintermTable newMintermTable = oldMintermTable;
-        
-        if (oldMintermTable != null && oldMintermTable.numberOfLines > 0)
-        {
-            TableLine[] oldTable = oldMintermTable.table;
-            int oldTableLength = oldMintermTable.numberOfLines;
-            newMintermTable = new MintermTable(oldTableLength);
-            
-            char[][] usedMinterms = new char[oldTableLength][oldTable[0].mintermAsBinary.length];
-            int usedMintermsCounter = 0;
-            char[] mintermAsBinary;
-
-            newMintermTable.isPossibleToSimplify = oldMintermTable.isPossibleToSimplify;
-
-            for (int i = 0; i < oldTableLength; i++)
-            {
-                mintermAsBinary = oldTable[i].mintermAsBinary;
-
-                if (Array.indexOf(mintermAsBinary, usedMinterms) == -1)
-                {
-                    usedMinterms[ usedMintermsCounter++ ] = mintermAsBinary;
-                    newMintermTable.addLine(oldTable[i].mintermsAsDecimal, mintermAsBinary);
-                }
-            }
-        }
-        
-        return newMintermTable;
-    }
-    
-    /**
-     * Agrupa os mintermos com distancia hamming de 1. Obs.: E' necessario chamar
-     * este metodo varias vezes ate' que o campo isPossibleToSimplify da
-     * {@code MintermTable} esteja {@code false}.
-     * 
-     * @param oldMintermTable tabela de mintermos anterior que tenha sido gerada
-     * ou pelo metodo groupMinterms ou pelo metodo getMintermsTable.
-     * 
-     * @return Nova {@code MintermTable} com os mintermos agrupados e a representacao
-     * binaria simplificada.
-     */
-    
-    public static MintermTable groupMinterms(MintermTable oldMintermTable)
-    {
-        MintermTable newMintermTable = null;
-        
-        if (oldMintermTable != null && oldMintermTable.numberOfLines > 0)
-        {
-            TableLine[] oldTable = oldMintermTable.table;
-            int oldTableLength = oldMintermTable.numberOfLines;
-            int sizeOfMintermsGroup = oldTable[0].mintermsAsDecimal.length * 2;
-            int[] usedMinterms = new int[oldTableLength];
-            int[] notUsedMinterms = new int[oldTableLength];
-            int usedMintermsCounter = 0;
-            int notUsedMintermsCounter = 0;
-            Arrays.fill(usedMinterms, -1);
-
-            newMintermTable = new MintermTable( getMaxSizeOfNewMintermTable(oldMintermTable) );
-            int[] mintermsGroup;
-            TableLine tableLine1;
-            TableLine tableLine2;
-
-            for (int i = 0; i < oldTableLength; i++)
-            {
-                for (int j = i + 1; j < oldTableLength; j++)
-                {
-                    tableLine1 = oldTable[i];
-                    tableLine2 = oldTable[j];
-
-                    if (Logic.getHammingDistance(tableLine1.mintermAsBinary, tableLine2.mintermAsBinary) == 1)
-                    {
-                        // adiciona os valores de i e j no arranjo de mintermos usados
-                        if (Array.indexOf(i, usedMinterms) == -1 && usedMintermsCounter < usedMinterms.length)
-                        {
-                            usedMinterms[ usedMintermsCounter++ ] = i;
-                        }
-
-                        if (Array.indexOf(j, usedMinterms) == -1 && usedMintermsCounter < usedMinterms.length)
-                        {
-                            usedMinterms[ usedMintermsCounter++ ] = j;
-                        }
-
-                        // cria espaco para guardar os mintermos participantes dessa
-                        // simplificacao por distancia hamming de 1
-                        mintermsGroup = new int[sizeOfMintermsGroup];
-
-                        // pega os mintermos da linha de tabela 1 e coloca no grupo de participantes
-                        System.arraycopy(
-                                tableLine1.mintermsAsDecimal, 0,
-                                mintermsGroup, 0,
-                                tableLine1.mintermsAsDecimal.length
-                        );
-
-                        // pega os mintermos da linha de tabela 2 e coloca no grupo de participantes
-                        System.arraycopy(
-                                tableLine2.mintermsAsDecimal, 0,
-                                mintermsGroup, tableLine1.mintermsAsDecimal.length,
-                                tableLine2.mintermsAsDecimal.length
-                        );
-
-                        // cria uma linha na nova tabela com os mintermos usados e
-                        // com a simplificacao por QuineMcCluskey em binario
-                        newMintermTable.addLine(
-                                mintermsGroup,
-                                Logic.removeBitOfHammingDistance1(tableLine1.mintermAsBinary, tableLine2.mintermAsBinary)
-                        );
-                    }
-                }
-
-                if (Array.indexOf(i, usedMinterms) == -1)
-                {
-                    notUsedMinterms[ notUsedMintermsCounter++ ] = i;
-                }
-            }
-
-            for (int i = 0; i < notUsedMintermsCounter; i++)
-            {
-                newMintermTable.addLine(
-                        oldTable[ notUsedMinterms[i] ].mintermsAsDecimal,
-                        oldTable[ notUsedMinterms[i] ].mintermAsBinary
-                );
-            }
-
-            if (usedMintermsCounter == 0)
-            {
-                newMintermTable = oldMintermTable;
-                newMintermTable.isPossibleToSimplify = false;/*
-                newMintermTable = removeDuplicatedGroups(newMintermTable);
-                newMintermTable = removeGroupsThatAllMintermsWereUsed(newMintermTable);*/
-            }
-
-            else
-            {
-                newMintermTable = removeDuplicatedGroups(newMintermTable);
-            }
-        }
-        
-        return newMintermTable;
-    }
-    
-    /**
-     * Pega todos os mintermos da tabela e retorna um arranjo com eles em ordem
-     * crescente. Sem nenhum mintermo duplicado.
-     * 
-     * @param mintermTable tabela de mintermos a ser percorrida
-     * 
-     * @return Arranjo com os mintermos da tabela em ordem crescente.
-     */
-    
-    public static int[] getAllMintermsInCrescentOrder(MintermTable mintermTable)
-    {
-        int[] minterms = null;
-        
-        if (mintermTable != null)
-        {
-            int numberOfLines = mintermTable.numberOfLines;
-            
-            if (numberOfLines > 0)
-            {
-                int[] tableMinterms = new int[ numberOfLines * mintermTable.table[0].mintermsAsDecimal.length ];
-                Arrays.fill(tableMinterms, -1);
-                int mintermsCounter = 0;
-                int[] mintermsAsDecimal;
-                int minterm;
-                
-                for (int i = 0; i < numberOfLines; i++)
-                {
-                    mintermsAsDecimal = mintermTable.table[i].mintermsAsDecimal;
-                    
-                    for (int j = 0; j < mintermsAsDecimal.length; j++)
-                    {
-                        minterm = mintermsAsDecimal[j];
-                        
-                        if (Array.indexOf(minterm, tableMinterms) == -1)
-                        {
-                            tableMinterms[ mintermsCounter++ ] = minterm;
-                        }
-                    }
-                }
-                
-                minterms = new int[mintermsCounter];
-                
-                System.arraycopy(tableMinterms, 0, minterms, 0, mintermsCounter);
-                
-                Arrays.sort(minterms);
-            }
-        }
-        
-        return minterms;
     }
     
     /**
@@ -449,74 +190,6 @@ public class MintermTable
         {
             table[numberOfLines++] = new TableLine(mintermsAsDecimal, mintermAsBinary);
         }
-    }
-
-    /**
-     * Procura um mintermo por toda a tabela e vai guardando em pares os
-     * indices das linhas e colunas, respectivamente, onde ele for
-     * encontrado. Caso nao seja encontrado, a funcao retorna uma matriz
-     * com 0 linhas.
-     * 
-     * @param minterm mintermo a ser procurado
-     * 
-     * @return Matriz em que cada linha tem um par de indices que representa
-     * a linha e a coluna onde o mintermo foi encontrado. A matriz tera' <i>n</i>
-     * linhas e 2 colunas, sendo <i>n</i> a quantidade de vezes que o mintermo foi
-     * encontrado.
-     */
-
-    public int[][] indexesOf(int minterm)
-    {
-        int column;
-        int[][] indexes = new int[numberOfLines][2];
-        int indexesCounter = 0;
-
-        for (int i = 0; i < numberOfLines; i++)
-        {
-            column = Array.indexOf(minterm, table[i].mintermsAsDecimal);
-
-            if (column != -1)
-            {
-                indexes[indexesCounter][0] = i;
-                indexes[indexesCounter++][1] = column;
-            }
-        }
-
-        int[][] definitiveIndexes = new int[indexesCounter][2];
-
-        for (int i = 0; i < indexesCounter; i++)
-        {
-            System.arraycopy(indexes[i], 0, definitiveIndexes[i], 0, 2);
-        }
-
-        return definitiveIndexes;
-    }
-
-    /**
-     * Verifica se todas as linhas da tabela tem pelo menos algum elemento
-     * do arranjo.
-     * 
-     * @param array arranjo a ser usado como base nas pesquisas
-     * 
-     * @return {@code true} se todas as linhas da tabela tiverem pelo menos um
-     * elemento do arranjo, caso contrario, {@code false}.
-     */
-
-    public boolean eachLineHasOneOrMoreElementsOfTheArray(int[] array)
-    {
-        boolean eachLineHasOneOrMoreElements = false;
-
-        if (numberOfLines > 0)
-        {
-            eachLineHasOneOrMoreElements = ( Array.indexOf(array, table[0].mintermsAsDecimal)[0] != -1 );
-
-            for (int i = 1; eachLineHasOneOrMoreElements && i < numberOfLines; i++)
-            {
-                eachLineHasOneOrMoreElements = ( Array.indexOf(array, table[i].mintermsAsDecimal)[0] != -1 );
-            }
-        }
-
-        return eachLineHasOneOrMoreElements;
     }
 
     /**

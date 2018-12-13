@@ -29,27 +29,28 @@ public class KarnaughMap
 
             char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
             char[][] mintermsMap = new char[graySequence1.length][graySequence2.length];
-
+            int grayIndex;
+            
             this.mintermsMap = mintermsMap;
 
             for (int i = 0; i < graySequence1.length; i++)
             {
                 for (int j = 0; j < graySequence2.length; j++)
                 {
-                    if
-                    (
-                        Array.indexOf(
-                            Array.concatArrays(graySequence2[j], graySequence1[i]),
-                            mintermsAsBinary
-                        ) == -1
-                    )
+                    grayIndex =
+                            Array.indexOf(
+                                Array.concatArrays(graySequence2[j], graySequence1[i]),
+                                mintermsAsBinary
+                            );
+                    
+                    if (grayIndex == -1)
                     {
                         mintermsMap[i][j] = '0';
                     }
 
                     else
                     {
-                        mintermsMap[i][j] = '1';
+                        mintermsMap[i][j] = (mintermTable.table[grayIndex].mintermsAsDecimal[0] >= 0 ? '1' : 'x');
                     }
                 }
             }

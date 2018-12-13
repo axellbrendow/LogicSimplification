@@ -25,14 +25,19 @@ public class Program
         // Extrai os mintermos e cria uma tabela para eles
         MintermTable mintermsTable = MintermTable.getMintermsTable(truthTable);
         
-        IO.println("\nMapa de Karnaugh:\n");
+        IO.println("\nMintermos:");
+        mintermsTable.printTable();
+        
         KarnaughMap karnaughMap = new KarnaughMap(mintermsTable, namesOfVariables);
+        
+        IO.println("\nMapa de Karnaugh:\n");
         karnaughMap.printMapWithLogicValues();
         IO.println("");
-        karnaughMap.printMapWithMintermsAsDecimal();
+        karnaughMap.printMapWithMintermsAsDecimal();/*
         
-        IO.println("\nMintermos:");
-        mintermsTable.printTable();/*
+        IO.println("\nGrupos:\n");
+        karnaughMap.groupMinterms();
+        karnaughMap.printGroups();
         
         IO.println("\nEstatisticas:\n");
         karnaughMap.printStatistics();
