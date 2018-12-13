@@ -7,6 +7,71 @@ package Util;
 public class Logic
 {
     /**
+     * Gera a sequencia de gray para a quantidade de bits especificada no
+     * formato de armazenamento little endian. O bit menos significativo
+     * vem primeiro.
+     * <p>Exemplo para 2 bits:</p>
+     * 
+     * <ol style="list-style-type: none">
+     *  <li>getGraySequence(2)[0] = { '0', '0' }</li>
+     *  <li>getGraySequence(2)[1] = { '1', '0' }</li>
+     *  <li>getGraySequence(2)[2] = { '1', '1' }</li>
+     *  <li>getGraySequence(2)[3] = { '0', '1' }</li>
+     * </ol>
+     * 
+     * <p>A leitura dos numeros deve ser feita da direita para a esquerda.</p>
+     * 
+     * @param numberOfBits numero de bits a serem usados
+     * 
+     * @return Um arranjo em que em cada uma de suas posicoes sai um arranjo
+     * de caracteres sendo cada um destes um numero da sequencia.
+     */
+
+    public static char[][] getGraySequence(int numberOfBits)
+    {
+        char[][] graySequence = null;
+
+        if (numberOfBits > 0)
+        {
+            int numberOfLines = (int) Math.pow(2, numberOfBits);
+            graySequence = new char[numberOfLines][numberOfBits];
+            graySequence[0][0] = '0';
+            graySequence[1][0] = '1';
+
+            int currentNumberOfLines;
+            int lastMirrorLine;
+
+            for (int currentNumberOfBits = 1;
+                    currentNumberOfBits < numberOfBits;
+                    currentNumberOfBits++)
+            {
+                currentNumberOfLines = (int) Math.pow(2, currentNumberOfBits);
+                lastMirrorLine = currentNumberOfLines * 2 - 1;
+
+                for (int j = 0; j < currentNumberOfBits; j++)
+                {
+                    for (int currentLine = currentNumberOfLines - 1;
+                            currentLine > -1;
+                            currentLine--)
+                    {
+                        graySequence[lastMirrorLine - currentLine][j] = graySequence[currentLine][j];
+                    }
+                }
+
+                for (int currentLine = currentNumberOfLines - 1;
+                        currentLine > -1;
+                        currentLine--)
+                {
+                    graySequence[currentLine][currentNumberOfBits] = '0';
+                    graySequence[lastMirrorLine - currentLine][currentNumberOfBits] = '1';
+                }
+            }
+        }
+
+        return graySequence;
+    }
+    
+    /**
      * Percorre os dois numeros binarios contando quantos bits sao diferentes.
      * 
      * @param binary1 primeiro numero binario

@@ -24,8 +24,8 @@ public class KarnaughMap
                 this.variablesNames = variablesNames;
             }
 
-            graySequence2 = getGraySequence(numberOfVariables / 2);
-            graySequence1 = getGraySequence(numberOfVariables - graySequence2[0].length);
+            graySequence2 = Logic.getGraySequence(numberOfVariables / 2);
+            graySequence1 = Logic.getGraySequence(numberOfVariables - graySequence2[0].length);
 
             char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
             char[][] mintermsMap = new char[graySequence1.length][graySequence2.length];
@@ -55,72 +55,68 @@ public class KarnaughMap
             }
         }
     }
-
+    
     /**
-     * Gera a sequencia de gray para a quantidade de bits especificada no
-     * formato de armazenamento little endian. O bit menos significativo
-     * vem primeiro.
-     * <p>Exemplo para 2 bits:</p>
+     * Concatena os nomes das variaveis da funcao logica. Coloca uma \ (barra invertida)
+     * no meio da string. Caso a funcao logica tenha uma quantidade impar de
+     * variaveis, a barra e' colocada imediatamente apos a metade.
      * 
-     * <ol style="list-style-type: none">
-     *  <li>getGraySequence(2)[0] = { '0', '0' }</li>
-     *  <li>getGraySequence(2)[1] = { '1', '0' }</li>
-     *  <li>getGraySequence(2)[2] = { '1', '1' }</li>
-     *  <li>getGraySequence(2)[3] = { '0', '1' }</li>
-     * </ol>
+     * <p>Ex: "abc\de"</p>
      * 
-     * <p>A leitura dos numeros deve ser feita da direita para a esquerda.</p>
-     * 
-     * @param numberOfBits numero de bits a serem usados
-     * 
-     * @return Um arranjo em que em cada uma de suas posicoes sai um arranjo
-     * de caracteres sendo cada um destes um numero da sequencia.
+     * @return Concatenacao dos nomes das variaveis da funcao logica com uma barra
+     * no meio.
      */
-
-    public static final char[][] getGraySequence(int numberOfBits)
+    
+    private String getVariablesNames()
     {
-        char[][] graySequence = null;
+        String names = "";
+        int numberOfVariablesOfGray1 = graySequence1[0].length;
+        int numberOfVariablesOfGray2 = graySequence2[0].length;
 
-        if (numberOfBits > 0)
+        for (int i = 0; i < numberOfVariablesOfGray1; i++)
         {
-            int numberOfLines = (int) Math.pow(2, numberOfBits);
-            graySequence = new char[numberOfLines][numberOfBits];
-            graySequence[0][0] = '0';
-            graySequence[1][0] = '1';
-
-            int currentNumberOfLines;
-            int lastMirrorLine;
-
-            for (int currentNumberOfBits = 1;
-                    currentNumberOfBits < numberOfBits;
-                    currentNumberOfBits++)
-            {
-                currentNumberOfLines = (int) Math.pow(2, currentNumberOfBits);
-                lastMirrorLine = currentNumberOfLines * 2 - 1;
-
-                for (int j = 0; j < currentNumberOfBits; j++)
-                {
-                    for (int currentLine = currentNumberOfLines - 1;
-                            currentLine > -1;
-                            currentLine--)
-                    {
-                        graySequence[lastMirrorLine - currentLine][j] = graySequence[currentLine][j];
-                    }
-                }
-
-                for (int currentLine = currentNumberOfLines - 1;
-                        currentLine > -1;
-                        currentLine--)
-                {
-                    graySequence[currentLine][currentNumberOfBits] = '0';
-                    graySequence[lastMirrorLine - currentLine][currentNumberOfBits] = '1';
-                }
-            }
+            names += variablesNames[i];
         }
 
-        return graySequence;
-    }
+        names += "\\";
 
+        for (int i = 0; i < numberOfVariablesOfGray2; i++)
+        {
+            names += variablesNames[i + numberOfVariablesOfGray1];
+        }
+
+        return names;
+    }
+    
+    /**
+     * O cabecalho do mapa de Karnaugh e' composto pelos nomes das variaveis
+     * da funcao logica e, logo a direita, de uma sequencia de gray em que a
+     * quantidade de bits e' metade da quantidade de variaveis.
+     * 
+     * <p>Ex: "abc\de 00 01 11 10"</p>
+     * 
+     * @return Sequencia de gray do cabecalho.
+     */
+    
+    private String getHeaderGraySequence()
+    {
+        int numberOfVariablesOfGray2 = graySequence2[0].length;
+        
+        String headerGraySequence = "";
+        
+        for (int i = 0; i < graySequence2.length; i++)
+        {
+            headerGraySequence += " " +
+                    Strings.centerStrOnABlock
+                    (
+                        TableLine.getBinaryRepresentation(graySequence2[i]),
+                        numberOfVariablesOfGray2
+                    );
+        }
+
+        return headerGraySequence;
+    }
+    
     /**
      *Imprime o mapa de Karnaugh no seguinte formato:
      * 
@@ -174,43 +170,14 @@ public class KarnaughMap
     {
         if (graySequence1 != null && graySequence2 != null && variablesNames != null)
         {
-            String line = "";
-            int numberOfVariablesOfGray1 = graySequence1[0].length;
-            int numberOfVariablesOfGray2 = graySequence2[0].length;
-
-            for (int i = 0; i < numberOfVariablesOfGray1; i++)
-            {
-                line += variablesNames[i];
-            }
-
-            line += "\\";
-
-            for (int i = 0; i < numberOfVariablesOfGray2; i++)
-            {
-                line += variablesNames[i + numberOfVariablesOfGray1];
-            }
-
+            String line = getVariablesNames();
             int firstColumnSize = line.length();
-
-            if (numberOfVariablesOfGray1 > firstColumnSize)
-            {
-                firstColumnSize = numberOfVariablesOfGray1;
-            }
-
-            line = Strings.centerStrOnABlock(line, firstColumnSize);
-
-            for (int i = 0; i < graySequence2.length; i++)
-            {
-                line += " " +
-                        Strings.centerStrOnABlock
-                        (
-                            TableLine.getBinaryRepresentation(graySequence2[i]),
-                            numberOfVariablesOfGray2
-                        );
-            }
-
+            int numberOfVariablesOfGray2 = graySequence2[0].length;
+            
+            line += getHeaderGraySequence();
+            
             IO.println(line + "\n");
-
+            
             for (int i = 0; i < graySequence1.length; i++)
             {
                 line = Strings.centerStrOnABlock
@@ -273,50 +240,22 @@ public class KarnaughMap
      *  </tr>
      * </table>
      * 
-     * <p>Sendo "abc" e "de" os nomes das variaveis escolhidos.</p>
+     * <p>Sendo "abc" e "de" os nomes das variaveis escolhidos. E os numeros
+     * decimais os representantes de cada mintermo.</p>
      */
 
     public void printMapWithMintermsAsDecimal()
     {
         if (graySequence1 != null && graySequence2 != null && variablesNames != null)
         {
-            String line = "";
-            int numberOfVariablesOfGray1 = graySequence1[0].length;
-            int numberOfVariablesOfGray2 = graySequence2[0].length;
-
-            for (int i = 0; i < numberOfVariablesOfGray1; i++)
-            {
-                line += variablesNames[i];
-            }
-
-            line += "\\";
-
-            for (int i = 0; i < numberOfVariablesOfGray2; i++)
-            {
-                line += variablesNames[i + numberOfVariablesOfGray1];
-            }
-
+            String line = getVariablesNames();
             int firstColumnSize = line.length();
-
-            if (numberOfVariablesOfGray1 > firstColumnSize)
-            {
-                firstColumnSize = numberOfVariablesOfGray1;
-            }
-
-            line = Strings.centerStrOnABlock(line, firstColumnSize);
-
-            for (int i = 0; i < graySequence2.length; i++)
-            {
-                line += " " +
-                        Strings.centerStrOnABlock
-                        (
-                            TableLine.getBinaryRepresentation(graySequence2[i]),
-                            numberOfVariablesOfGray2
-                        );
-            }
-
+            int numberOfVariablesOfGray2 = graySequence2[0].length;
+            
+            line += getHeaderGraySequence();
+            
             IO.println(line + "\n");
-
+            
             for (int i = 0; i < graySequence1.length; i++)
             {
                 line = Strings.centerStrOnABlock
@@ -327,7 +266,16 @@ public class KarnaughMap
 
                 for (int j = 0; j < graySequence2.length; j++)
                 {
-                    line += " " + Strings.centerStrOnABlock("" + mintermsMap[i][j], numberOfVariablesOfGray2);
+                    line += " " +
+                            Strings.centerStrOnABlock
+                            (
+                                "" +
+                                MATH.binaryToDecimal
+                                (
+                                    Array.concatArrays(graySequence2[j], graySequence1[i])
+                                ),
+                                numberOfVariablesOfGray2
+                            );
                 }
 
                 IO.println(line);

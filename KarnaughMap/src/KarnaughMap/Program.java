@@ -28,15 +28,16 @@ public class Program
         IO.println("\nMapa de Karnaugh:\n");
         KarnaughMap karnaughMap = new KarnaughMap(mintermsTable, namesOfVariables);
         karnaughMap.printMapWithLogicValues();
+        IO.println("");
         karnaughMap.printMapWithMintermsAsDecimal();
         
         IO.println("\nMintermos:");
-        mintermsTable.printTable();
+        mintermsTable.printTable();/*
         
         IO.println("\nEstatisticas:\n");
         karnaughMap.printStatistics();
 
         IO.println("\nExpressao final:\n");
-        karnaughMap.printExpression(namesOfVariables);
+        karnaughMap.printExpression(namesOfVariables);*/
     }
 }

@@ -32,6 +32,8 @@ public class Strings
      * a string recebida nele. Os espacos restantes sao preenchidos com espacos
      * em branco.
      * 
+     * <p>Ex: centerStrOnABlock("abc", 5) = " abc "</p>
+     * 
      * @param str string a ser centralizada
      * @param blockSize tamanho do bloco de caracteres desejado
      * 
