@@ -8,7 +8,23 @@ import java.util.Arrays;
 
 public class Array
 {
-
+    /**
+     * Usando a convensao de preencher os arranjos de inteiros com -1 antes de
+     * usa'-los, esse metodo serve para saber quantos inteiros foram colocados
+     * no arranjo a partir da posicao 0 e em sequencia.
+     * 
+     * @param array arranjo a ser percorrido
+     * 
+     * @return Quantos inteiros foram colocados no arranjo a partir da posicao
+     * 0 e em sequencia.
+     */
+    
+    public static int getNumberOfElementsOf(int[] array)
+    {
+        int numberOfElements = indexOf(-1, array);
+        
+        return ( numberOfElements != -1 ? numberOfElements : array.length );
+    }
     
     /**
      * Percorre o arranjo procurando o seu maior elemento.

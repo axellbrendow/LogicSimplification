@@ -30,6 +30,18 @@ public class MintermTable
         return isPossibleToSimplify;
     }
     
+    public TableLine getLastLine()
+    {
+        TableLine lastLine = null;
+        
+        if (numberOfLines > 0)
+        {
+            lastLine = table[numberOfLines - 1];
+        }
+        
+        return lastLine;
+    }
+    
     protected static int encryptDontCare(int mintermAsDecimal)
     {
         return -mintermAsDecimal - 1;
@@ -189,6 +201,20 @@ public class MintermTable
         if (numberOfLines < table.length)
         {
             table[numberOfLines++] = new TableLine(mintermsAsDecimal, mintermAsBinary);
+        }
+    }
+
+    /**
+     * Adiciona a linha de tabela no final da tabela se ainda houver espaco.
+     * 
+     * @param tableLine linha de tabela a ser adicionada
+     */
+
+    public void addLine(TableLine tableLine)
+    {
+        if (numberOfLines < table.length)
+        {
+            table[numberOfLines++] = tableLine;
         }
     }
 

@@ -1,6 +1,7 @@
 package Structures;
 
 import Util.*;
+import java.util.Arrays;
 
 /**
  * @author Axell Brendow (https://github.com/axell-brendow)
@@ -11,8 +12,11 @@ public class KarnaughMap
     char[][] graySequence1;
     char[][] graySequence2;
     char[][] mintermsMap;
+    int[][] decimalMintermsMap;
     String[] variablesNames;
-
+    MintermTable groupsTable;
+    int[] statistics;
+    
     public KarnaughMap(MintermTable mintermTable, String[] variablesNames)
     {
         if (mintermTable != null && mintermTable.numberOfLines > 0)
@@ -23,25 +27,28 @@ public class KarnaughMap
             {
                 this.variablesNames = variablesNames;
             }
-
+            
+            statistics = new int[numberOfVariables + 1];
+            groupsTable = new MintermTable( (int) Math.pow(2, numberOfVariables) );
+            
             graySequence2 = Logic.getGraySequence(numberOfVariables / 2);
             graySequence1 = Logic.getGraySequence(numberOfVariables - graySequence2[0].length);
 
             char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
-            char[][] mintermsMap = new char[graySequence1.length][graySequence2.length];
+            mintermsMap = new char[graySequence1.length][graySequence2.length];
+            decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
+            char[] currentMinterm;
             int grayIndex;
-            
-            this.mintermsMap = mintermsMap;
 
             for (int i = 0; i < graySequence1.length; i++)
             {
                 for (int j = 0; j < graySequence2.length; j++)
                 {
-                    grayIndex =
-                            Array.indexOf(
-                                Array.concatArrays(graySequence2[j], graySequence1[i]),
-                                mintermsAsBinary
-                            );
+                    currentMinterm = getCorrespondingGrayNumber(i, j);
+                    
+                    decimalMintermsMap[i][j] = MATH.binaryToDecimal(currentMinterm);
+                    
+                    grayIndex = Array.indexOf(currentMinterm, mintermsAsBinary);
                     
                     if (grayIndex == -1)
                     {
@@ -58,6 +65,468 @@ public class KarnaughMap
     }
     
     /**
+     * Obtem o numero de gray correspondente ao mintermo da linha e coluna
+     * especificada.
+     * 
+     * <p>Exemplo:</p>
+     * <p>Considerando um mapa de Karnaugh de duas variaveis:</p>
+     * 
+     * <table>
+     *  <tr>
+     *      <td>a\b</td> <td>0</td> <td>1</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>0</td> <td>0</td> <td>0</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>1</td> <td>0</td> <td>0</td>
+     *  </tr>
+     * </table>
+     * 
+     * <p>getCorrespondingGrayNumber(0, 1) = { '1', '0' }</p>
+     * <p>E' importante lembrar que o numero esta' como little endian, ou seja,
+     * sua leitura e' feita da direita para a esquerda: 01</p>
+     * 
+     * @param mintermLine indice da linha do mintermo
+     * @param mintermColumn indice da coluna do mintermo
+     * 
+     * @return Numero de gray do mintermo
+     */
+    
+    private char[] getCorrespondingGrayNumber(int mintermLine, int mintermColumn)
+    {
+        return Array.concatArrays(graySequence2[mintermColumn], graySequence1[mintermLine]);
+    }
+    
+    private int getNumberOfLines()
+    {
+        return graySequence1.length;
+    }
+    
+    private int getNumberOfColumns()
+    {
+        return graySequence2.length;
+    }
+    
+    private int getTotalNumberOfCombinationsBetweenVariables()
+    {
+        return getNumberOfLines() * getNumberOfColumns();
+    }
+    
+    private int getNumberOfVariablesOfGray1()
+    {
+        return graySequence1[0].length;
+    }
+    
+    private int getNumberOfVariablesOfGray2()
+    {
+        return graySequence2[0].length;
+    }
+    
+    private int getNumberOfVariables()
+    {
+        return getNumberOfVariablesOfGray1() + getNumberOfVariablesOfGray2();
+    }
+    
+    /**
+     * Converte as coordenadas do mintermo no mapa de Karnaugh bidimensional para
+     * a coordenada ou indice equivalente no mapa de Karnaugh unidimensional.
+     * 
+     * @param mintermLine linha do mintermo
+     * @param mintermColumn coluna do mintermo
+     * 
+     * @return Coordenada do mintermo no Mapa de Karnaugh unidimensional.
+     */
+    
+    private int convertTo1D(int mintermLine, int mintermColumn)
+    {
+        int numberOfColumns = getNumberOfColumns();
+        int mintermIndex = mintermLine * numberOfColumns;
+        
+        if (mintermLine % 2 == 0)
+        {
+            mintermIndex += mintermColumn;
+        }
+        
+        else
+        {
+            mintermIndex += numberOfColumns - 1 - mintermColumn;
+        }
+        
+        return mintermIndex;
+    }
+    
+    /**
+     * Converte a coordenada ou indice do mintermo no mapa de Karnaugh
+     * unidimensional para as coordenadas equivalentes no mapa de Karnaugh
+     * bidimensional. O arranjo retornado tem exatamente duas posicoes onde a
+     * primeira e' a linha e a segunda a coluna do mintermo.
+     * 
+     * @param mintermIndex coordenada ou indice do mintermo no mapa de Karnaugh
+     * unidimensional
+     * 
+     * @return Coordenadas do mintermo no mapa de Karnaugh bidimensional.
+     */
+    
+    private int[] convertTo2D(int mintermIndex)
+    {
+        int numberOfColumns = getNumberOfColumns();
+        int[] coords = new int[2];
+        
+        // linha do mintermo
+        coords[0] = mintermIndex / numberOfColumns;
+        
+        //coluna do mintermo
+        coords[1] = mintermIndex % numberOfColumns;
+        
+        if (coords[0] % 2 == 1)
+        {
+            coords[1] = numberOfColumns - 1 - coords[1];
+        }
+        
+        return coords;
+    }
+    
+    /**
+     * Neste metodo ja' e' implementada a ideia do mapa de Karnaugh de uma unica
+     * dimensao, um arranjo. Fornecido o indice de um mintermo <b>base</b>
+     * ({@code mintermIndex}) e uma referencia ({@code nthHD1Minterm}) para qual
+     * dos mintermos que faz distancia hamming de 1 com o <b>base</b> deve ser
+     * obtido, o metodo retorna o indice, no mapa de Karnaugh, desse outro mintermo.
+     * 
+     * <p>Ilustracao:</p>
+     * <p>Mapa de Karnaugh bidimensional:</p>
+     * 
+     * <table>
+     *  <tr>
+     *      <td>a\b</td> <td>0</td> <td>1</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>0</td> <td>1</td> <td>0</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>1</td> <td>0</td> <td>1</td>
+     *  </tr>
+     * </table>
+     * 
+     * <p>Mapa de Karnaugh unidimensional equivalente: { 1, 0, 1, 0 }</p>
+     * <p>Considerando que a linha 0 e' a primeira, as linhas impares do mapa
+     * ficam invertidas no arranjo. Isso e' consequencia da organizacao do mapa
+     * no arranjo que e' feita de acordo com a sequencia de gray:</p>
+     * 
+     * <ul style="list-style-type: none">
+     *  <li>00</li>
+     *  <li>01</li>
+     *  <li>11</li>
+     *  <li>10</li>
+     * </ul>
+     * 
+     * @param mintermIndex indice do mintermo <b>base</b>
+     * @param nthHD1Minterm referencia para qual dos mintermos que faz distancia
+     * hamming de 1 com o <b>base</b> deve ser obtido
+     * 
+     * @return Indice do mintermo que faz distancia hamming de 1 com o mintermo
+     * <b>base</b>.
+     */
+    
+    private int getMintermThatDoesHD1With(int mintermIndex, int nthHD1Minterm) // funcionamento semelhante ao de uma funcao hash
+    {
+        int numberOfVariables = getNumberOfVariables();
+        int mapSize = (int) Math.pow(2, numberOfVariables - nthHD1Minterm);
+        int equivalentIndexOnThisMap = mintermIndex % mapSize;
+        int HD1Minterm = mapSize - 1 - equivalentIndexOnThisMap;
+        
+        if (mintermIndex >= mapSize)
+        {
+            HD1Minterm = mintermIndex + HD1Minterm - equivalentIndexOnThisMap;
+        }
+        
+        return HD1Minterm;
+    }
+    
+    /**
+     * Transforma o indice do mintermo para as coordenadas equivalente no mapa
+     * de Karnaugh bidimensional e checa se no ponto exato existe o valor '1' ou
+     * 'x'.
+     * 
+     * @param mintermIndex indice do mintermo a ser analisado
+     * 
+     * @return {@code true} se no ponto do mintermo existir o valor '1' ou 'x'.
+     * Caso contrario, {@code false}.
+     */
+    
+    private boolean mintermMakesFuncReturnTrueOrIsADontCare(int mintermIndex)
+    {
+        int[] coordsOfHD1Minterm = convertTo2D(mintermIndex);
+        char logicValue = mintermsMap[ coordsOfHD1Minterm[0] ][ coordsOfHD1Minterm[1] ];
+        
+        return logicValue == '1' || logicValue == 'x';
+    }
+    
+    /**
+     * Dentre os mintermos que fazem distancia hamming de 1 com o mintermo
+     * <b>base</b>, que e' o mintermo do indice {@code mintermIndex}, checa se
+     * o que e' referenciado por {@code nthHD1Minterm} faz a funcao logica
+     * retornar 1 ou e' um don't care.
+     * 
+     * @param mintermIndex indice do mintermo <b>base</b>
+     * @param nthHD1Minterm referencia para qual dos mintermos que faz distancia
+     * hamming de 1 com o <b>base</b> deve ser procurado
+     * 
+     * @return {@code true} se o mintermo referenciado por {@code nthHD1Minterm}
+     * faz a funcao logica retornar 1 ou e' um don't care. Caso contrario,
+     * {@code false}.
+     */
+    
+    private boolean hasMintermThatDoesHD1(int mintermIndex, int nthHD1Minterm)
+    {
+        int indexOfHD1Minterm = getMintermThatDoesHD1With(mintermIndex, nthHD1Minterm);
+        
+        return mintermMakesFuncReturnTrueOrIsADontCare(indexOfHD1Minterm);
+    }
+    
+    /**
+     * Percorre o arranjo de indices dos mintermos participantes do grupo e ve
+     * se todos esses mintermos tem o mintermo que faz distancia hamming de 1
+     * com eles.
+     * 
+     * <p>Obs.: Caso o arranjo tenha mais espacos do que a quantidade de
+     * mintermos do grupo, as posicoes depois do ultimo mintermo devem estar
+     * preenchidas com valores -1.</p>
+     * 
+     * @param mintermsGroup arranjo de indices dos mintermos participantes do
+     * grupo
+     * @param nthHD1Minterm referencia para qual dos mintermos que faz distancia
+     * hamming de 1 com cada mintermo do grupo deve ser procurado
+     * 
+     * @return {@code mintermsGroup} caso algum dos mintermos do grupo nao tenha
+     * o mintermo que faz distancia hamming de 1 com ele. Caso contrario,
+     * retorna um novo grupo que tem os indices dos membros do grupo antigo e
+     * tambem os indices dos novos membros que sao os que fazem distancia
+     * hamming de 1 com os antigos.
+     */
+    
+    private int[] checkIfAllMintermsHasNthHD1Minterm(int[] mintermsGroup, int nthHD1Minterm)
+    {
+        int i;
+        int[] newGroup = new int[mintermsGroup.length];
+        Arrays.fill(newGroup, -1);
+        int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
+        int indexOfNthHD1Minterm;
+        boolean allMintermsHasNthHD1Minterm = 0 < numberOfElements;
+        
+        for (i = 0; allMintermsHasNthHD1Minterm && i < numberOfElements; i++)
+        {
+            indexOfNthHD1Minterm = getMintermThatDoesHD1With(mintermsGroup[i], nthHD1Minterm);
+            allMintermsHasNthHD1Minterm = mintermMakesFuncReturnTrueOrIsADontCare(indexOfNthHD1Minterm);
+            
+            if (allMintermsHasNthHD1Minterm)
+            {
+                newGroup[numberOfElements + i] = indexOfNthHD1Minterm;
+            }
+        }
+        
+        if (!allMintermsHasNthHD1Minterm)
+        {
+            //Arrays.fill(newGroup, numberOfElements, numberOfElements + i, -1);
+            newGroup = mintermsGroup;
+        }
+        
+        else
+        {
+            System.arraycopy(mintermsGroup, 0, newGroup, 0, numberOfElements);
+        }
+        
+        return newGroup;
+    }
+    
+    private int getCorrespondingDecimal(int mintermIndex)
+    {
+        int[] mintermCoords = convertTo2D(mintermIndex);
+        
+        return decimalMintermsMap[ mintermCoords[0] ][ mintermCoords[1] ];
+    }
+    
+    private int[] getCorrespondingDecimals(int[] mintermsGroup)
+    {
+        int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
+        int[] decimals = new int[numberOfElements];
+        
+        for (int i = 0; i < numberOfElements; i++)
+        {
+            decimals[i] = getCorrespondingDecimal( mintermsGroup[i] );
+        }
+        
+        return decimals;
+    }
+    
+    /**
+     * Tenta formar um grupo de mintermos. O primeiro mintermo, <b>base</b>, e' o
+     * mintermo da linha {@code mintermLine} e coluna {@code mintermColumn}.
+     * O proximo mintermo e' escolhido de acordo com {@code nthHD1Minterm} que
+     * indica qual dos mintermos que faz distancia hamming de 1 com o <b>base</b>
+     * deve ser escolhido. Para um mapa de Karnaugh de <b>n</b> variaveis, todos
+     * mintermos tem <b>n</b> outros mintermos que fazem distancia hamming de 1
+     * com ele.
+     * 
+     * @param mintermLine linha do primeiro mintermo do grupo
+     * @param mintermColumn coluna do primeiro mintermo do grupo
+     * @param nthHD1Minterm qual dos mintermos que faz distancia hamming de 1
+     * com o mintermo <b>base</b> deve ser o segundo ponto de partida
+     * 
+     * @return O maior grupo que pode ser formado com o mintermo base, partindo
+     * da referencia {@code nthHD1Minterm}.
+     */
+    
+    private TableLine getMintermGroup(int mintermLine, int mintermColumn, int nthHD1Minterm)
+    {
+        int numberOfVariables = getNumberOfVariables();
+        int maxGroupSize = (int) Math.pow(2, numberOfVariables - nthHD1Minterm);
+        char[] mintermAsBinary = getCorrespondingGrayNumber(mintermLine, mintermColumn);
+        int[] mintermsGroup = new int[maxGroupSize];
+        Arrays.fill(mintermsGroup, -1);
+        int currentSize = 1;
+        int newSize;
+        
+        mintermsGroup[0] = convertTo1D(mintermLine, mintermColumn);
+        
+        for (int i = nthHD1Minterm; i < numberOfVariables; i++)
+        {
+            mintermsGroup = checkIfAllMintermsHasNthHD1Minterm(mintermsGroup, i);
+            newSize = Array.getNumberOfElementsOf(mintermsGroup);
+            
+            if (newSize > currentSize)
+            {
+                currentSize = newSize;
+                mintermAsBinary[numberOfVariables - 1 - i] = '_';
+            }
+        }
+        
+        int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
+        int[] smallerGroup = new int[numberOfElements];
+        System.arraycopy(mintermsGroup, 0, smallerGroup, 0, numberOfElements);
+        
+        return new TableLine(smallerGroup, mintermAsBinary);
+    }
+    
+    /**
+     * Tenta formar o maior grupo de mintermos possivel sendo o mintermo da
+     * linha {@code mintermLine} e coluna {@code mintermColumn} o primeiro
+     * deles.
+     * 
+     * @param mintermLine linha do primeiro mintermo do grupo
+     * @param mintermColumn coluna do primeiro mintermo do grupo
+     * 
+     * @return {@code TableLine} em que o arranjo {@code mintermsAsDecimal} tem
+     * os indices, no mapa de Karnaugh unidimensional, de todos os mintermos
+     * participantes do grupo. Alem disso, o arranjo {@code mintermAsBinary}
+     * tera' o resultado da simplificacao na forma binaria.
+     */
+    
+    private TableLine getMintermGreatestGroup(int mintermLine, int mintermColumn)
+    {
+        int numberOfVariables = getNumberOfVariables();
+        int[] mintermsAsDecimal = { decimalMintermsMap[mintermLine][mintermColumn] };
+        int currentNumberOfSimplifications;
+        int greatestNumberOfSimplifications = 0;
+        
+        TableLine currentGroup;
+        TableLine greatestGroup =
+                new TableLine
+                (
+                        mintermsAsDecimal,
+                        getCorrespondingGrayNumber(mintermLine, mintermColumn)
+                );
+        
+        for (int i = 0; i < numberOfVariables; i++)
+        {
+            currentGroup = getMintermGroup(mintermLine, mintermColumn, i);
+            currentNumberOfSimplifications = Array.countChars('_', currentGroup.mintermAsBinary);
+            
+            if (currentNumberOfSimplifications > greatestNumberOfSimplifications)
+            {
+                greatestGroup = currentGroup;
+                greatestNumberOfSimplifications = currentNumberOfSimplifications;
+            }
+        }
+        
+        statistics[greatestNumberOfSimplifications]++;
+        
+        return greatestGroup;
+    }
+    
+    public void groupMinterms()
+    {
+        int numberOfLines = getNumberOfLines();
+        int numberOfColumns = getNumberOfColumns();
+        int mintermIndex;
+        int[] indexesOfMintermsOfTheGroup;
+        int[] usedMinterms = new int[getTotalNumberOfCombinationsBetweenVariables()];
+        Arrays.fill(usedMinterms, -1);
+        int counterOfUsedMinterms = 0;
+        
+        for (int i = 0; i < numberOfLines; i++)
+        {
+            for (int j = 0; j < numberOfColumns; j++)
+            {
+                if (mintermsMap[i][j] == '1')
+                {
+                    mintermIndex = convertTo1D(i, j);
+                    
+                    if (Array.indexOf(mintermIndex, usedMinterms) == -1)
+                    {
+                        groupsTable.addLine( getMintermGreatestGroup(i, j) );
+                        indexesOfMintermsOfTheGroup = groupsTable.getLastLine().mintermsAsDecimal;
+                        
+                        System.arraycopy(
+                                indexesOfMintermsOfTheGroup, 0,
+                                usedMinterms, counterOfUsedMinterms,
+                                indexesOfMintermsOfTheGroup.length);
+                    }
+                }
+            }
+        }
+    }/*
+    
+    public void groupMinterms()
+    {
+        int numberOfLines = getNumberOfLines();
+        int numberOfColumns = getNumberOfColumns();
+        int mintermIndex;
+        int mintermAsDecimal;
+        int[] usedMinterms = new int[getTotalNumberOfCombinationsBetweenVariables()];
+        Arrays.fill(usedMinterms, -1);
+        int counterOfUsedMinterms = 0;
+        int[] mintermsAsDecimal;
+        
+        for (int i = 0; i < numberOfLines; i++)
+        {
+            for (int j = 0; j < numberOfColumns; j++)
+            {
+                if (mintermsMap[i][j] == '1')
+                {
+                    mintermIndex = convertTo1D(i, j);
+                    mintermAsDecimal = getCorrespondingDecimal(mintermIndex);
+                    
+                    if (Array.indexOf(mintermAsDecimal, usedMinterms) == -1)
+                    {
+                        groupsTable.addLine( getMintermGreatestGroup(i, j) );
+                        mintermsAsDecimal = groupsTable.getLastLine().mintermsAsDecimal;
+                        
+                        System.arraycopy(
+                                mintermsAsDecimal, 0,
+                                usedMinterms, counterOfUsedMinterms, mintermsAsDecimal.length);
+                    }
+                }
+            }
+        }
+    }*/
+    
+    /**
      * Concatena os nomes das variaveis da funcao logica. Coloca uma \ (barra invertida)
      * no meio da string. Caso a funcao logica tenha uma quantidade impar de
      * variaveis, a barra e' colocada imediatamente apos a metade.
@@ -71,8 +540,8 @@ public class KarnaughMap
     private String getVariablesNames()
     {
         String names = "";
-        int numberOfVariablesOfGray1 = graySequence1[0].length;
-        int numberOfVariablesOfGray2 = graySequence2[0].length;
+        int numberOfVariablesOfGray1 = getNumberOfVariablesOfGray1();
+        int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
 
         for (int i = 0; i < numberOfVariablesOfGray1; i++)
         {
@@ -101,11 +570,12 @@ public class KarnaughMap
     
     private String getHeaderGraySequence()
     {
-        int numberOfVariablesOfGray2 = graySequence2[0].length;
+        int numberOfColumns = getNumberOfColumns();
+        int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
         
         String headerGraySequence = "";
         
-        for (int i = 0; i < graySequence2.length; i++)
+        for (int i = 0; i < numberOfColumns; i++)
         {
             headerGraySequence += " " +
                     Strings.centerStrOnABlock
@@ -173,13 +643,15 @@ public class KarnaughMap
         {
             String line = getVariablesNames();
             int firstColumnSize = line.length();
-            int numberOfVariablesOfGray2 = graySequence2[0].length;
+            int numberOfLines = getNumberOfLines();
+            int numberOfColumns = getNumberOfColumns();
+            int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
             
             line += getHeaderGraySequence();
             
             IO.println(line + "\n");
             
-            for (int i = 0; i < graySequence1.length; i++)
+            for (int i = 0; i < numberOfLines; i++)
             {
                 line = Strings.centerStrOnABlock
                         (
@@ -187,7 +659,7 @@ public class KarnaughMap
                             firstColumnSize
                         );
 
-                for (int j = 0; j < graySequence2.length; j++)
+                for (int j = 0; j < numberOfColumns; j++)
                 {
                     line += " " + Strings.centerStrOnABlock("" + mintermsMap[i][j], numberOfVariablesOfGray2);
                 }
@@ -251,13 +723,15 @@ public class KarnaughMap
         {
             String line = getVariablesNames();
             int firstColumnSize = line.length();
-            int numberOfVariablesOfGray2 = graySequence2[0].length;
+            int numberOfLines = getNumberOfLines();
+            int numberOfColumns = getNumberOfColumns();
+            int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
             
             line += getHeaderGraySequence();
             
             IO.println(line + "\n");
             
-            for (int i = 0; i < graySequence1.length; i++)
+            for (int i = 0; i < numberOfLines; i++)
             {
                 line = Strings.centerStrOnABlock
                         (
@@ -265,16 +739,12 @@ public class KarnaughMap
                             firstColumnSize
                         );
 
-                for (int j = 0; j < graySequence2.length; j++)
+                for (int j = 0; j < numberOfColumns; j++)
                 {
                     line += " " +
                             Strings.centerStrOnABlock
                             (
-                                "" +
-                                MATH.binaryToDecimal
-                                (
-                                    Array.concatArrays(graySequence2[j], graySequence1[i])
-                                ),
+                                "" + decimalMintermsMap[i][j],
                                 numberOfVariablesOfGray2
                             );
                 }
@@ -282,5 +752,95 @@ public class KarnaughMap
                 IO.println(line);
             }
         }
+    }
+
+    /**
+     * Imprime as estatisticas de grupos de mintermos formados.
+     */
+
+    public void printStatistics()
+    {
+        int groupCount;
+        int numberOfElements;
+
+        for (int i = 0; i < statistics.length; i++)
+        {
+            groupCount = statistics[i];
+
+            if (groupCount > 0)
+            {
+                numberOfElements = (int) Math.pow(2, i);
+
+                IO.println( groupCount + " grupo" + ( groupCount != 1 ? "s" : "" ) +
+                        " de " + numberOfElements + " elemento" + ( numberOfElements != 1 ? "s" : "" ) );
+            }
+        }
+    }
+
+    /**
+     * Recebe um numero binario, ja' simplificado ou nao no Mapa de Karnaugh,
+     * no formato <i>little endian</i>. Retorna uma string que representa a 
+     * expressao simplificada.
+     * 
+     * <p>Supondo que o numero binario seja { '0', '_', '1' } e os nomes das
+     * variaveis sejam { "a", "b", "c" }, a string retornada sera' "ac'".</p>
+     * 
+     * @param mintermAsBinary numero binario, simplificado ou nao por Quine
+     * McCluskey, no formato <i>little endian</i>
+     * 
+     * @return String que representa a expressao simplificada.
+     */
+
+    private String getExpression(char[] mintermAsBinary)
+    {
+        String expression = "";
+        
+        if (variablesNames != null)
+        {
+            for (int i = 0; i < variablesNames.length; i++)
+            {
+                if (mintermAsBinary[variablesNames.length - 1 - i] == '0')
+                {
+                    expression += variablesNames[i] + "'.";
+                }
+
+                else if (mintermAsBinary[variablesNames.length - 1 - i] == '1')
+                {
+                    expression += variablesNames[i] + ".";
+                }
+            }
+        }
+        
+        int length = expression.length();
+        
+        if (length > 0)
+        {
+            expression = expression.substring(0, length - 1);
+        }
+        
+        else
+        {
+            expression = "1";
+        }
+
+        return expression;
+    }
+
+    /**
+     * Imprime a expressao logica simplificada.
+     * 
+     * <p>Obs.: e' necessario ja' ter chamado o metodo groupMinterms.</p>
+     */
+
+    public void printExpression()
+    {
+        String expression = getExpression(groupsTable.table[0].mintermAsBinary);
+
+        for (int i = 1; i < groupsTable.numberOfLines; i++)
+        {
+            expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);;
+        }
+
+        IO.println(expression);
     }
 }

@@ -35,14 +35,14 @@ public class Program
         IO.println("");
         karnaughMap.printMapWithMintermsAsDecimal();/*
         
-        IO.println("\nGrupos:\n");
-        karnaughMap.groupMinterms();
-        karnaughMap.printGroups();
+        IO.println("\nGrupos:\n");*/
+        karnaughMap.groupMinterms();/*
+        karnaughMap.printGroups();*/
         
         IO.println("\nEstatisticas:\n");
         karnaughMap.printStatistics();
 
         IO.println("\nExpressao final:\n");
-        karnaughMap.printExpression(namesOfVariables);*/
+        karnaughMap.printExpression();
     }
 }
