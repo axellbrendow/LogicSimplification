@@ -598,8 +598,18 @@ public class CoverageMap
                 expression += variablesNames[i] + ".";
             }
         }
-
-        expression = expression.substring(0, expression.length() - 1);
+        
+        int length = expression.length();
+        
+        if (length > 0)
+        {
+            expression = expression.substring(0, length - 1);
+        }
+        
+        else
+        {
+            expression = "1";
+        }
 
         return expression;
     }
