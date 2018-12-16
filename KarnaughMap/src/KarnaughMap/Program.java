@@ -30,9 +30,12 @@ public class Program
         
         KarnaughMap karnaughMap = new KarnaughMap(mintermsTable, namesOfVariables);
         
-        IO.println("\nMapa de Karnaugh:\n");
+        IO.println("\nMapa de Karnaugh:");
+        
+        IO.println("\nValores logicos:\n");
         karnaughMap.printMapWithLogicValues();
-        IO.println("");
+        
+        IO.println("\nValores decimais:\n");
         karnaughMap.printMapWithMintermsAsDecimal();
         
         IO.println("\nGrupos:\n");

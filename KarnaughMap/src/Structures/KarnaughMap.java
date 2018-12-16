@@ -498,13 +498,14 @@ public class KarnaughMap
                 greatestGroup = currentGroup;
                 greatestNumberOfNotUsedMinterms = currentNumberOfNotUsedMinterms;
                 greatestNumberOfSimplifications = currentNumberOfSimplifications;
-            }/*
+            }
             
-            if (currentNumberOfSimplifications > greatestNumberOfSimplifications)
+            else if (currentNumberOfNotUsedMinterms == greatestNumberOfNotUsedMinterms &&
+                    currentNumberOfSimplifications > greatestNumberOfSimplifications)
             {
                 greatestGroup = currentGroup;
                 greatestNumberOfSimplifications = currentNumberOfSimplifications;
-            }*/
+            }
         }
         
         statistics[greatestNumberOfSimplifications]++;
@@ -544,41 +545,7 @@ public class KarnaughMap
                 }
             }
         }
-    }/*
-    
-    public void groupMinterms()
-    {
-        int numberOfLines = getNumberOfLines();
-        int numberOfColumns = getNumberOfColumns();
-        int mintermIndex;
-        int mintermAsDecimal;
-        int[] usedMinterms = new int[getTotalNumberOfCombinationsBetweenVariables()];
-        Arrays.fill(usedMinterms, -1);
-        int counterOfUsedMinterms = 0;
-        int[] mintermsAsDecimal;
-        
-        for (int i = 0; i < numberOfLines; i++)
-        {
-            for (int j = 0; j < numberOfColumns; j++)
-            {
-                if (mintermsMap[i][j] == '1')
-                {
-                    mintermIndex = convertTo1D(i, j);
-                    mintermAsDecimal = getCorrespondingDecimal(mintermIndex);
-                    
-                    if (Array.indexOf(mintermAsDecimal, usedMinterms) == -1)
-                    {
-                        groupsTable.addLine( getMintermGreatestGroup(i, j) );
-                        mintermsAsDecimal = groupsTable.getLastLine().mintermsAsDecimal;
-                        
-                        System.arraycopy(
-                                mintermsAsDecimal, 0,
-                                usedMinterms, counterOfUsedMinterms, mintermsAsDecimal.length);
-                    }
-                }
-            }
-        }
-    }*/
+    }
     
     /**
      * Concatena os nomes das variaveis da funcao logica. Coloca uma \ (barra invertida)
