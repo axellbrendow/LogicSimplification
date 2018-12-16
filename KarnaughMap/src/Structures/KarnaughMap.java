@@ -191,10 +191,11 @@ public class KarnaughMap
     
     /**
      * Neste metodo ja' e' implementada a ideia do mapa de Karnaugh de uma unica
-     * dimensao, um arranjo. Fornecido o indice de um mintermo <b>base</b>
-     * ({@code mintermIndex}) e uma referencia ({@code nthHD1Minterm}) para qual
+     * dimensao, um arranjo. Fornecido o indice ({@code mintermIndex}) de um
+     * mintermo <b>base</b> e uma referencia ({@code nthHD1Minterm}) para qual
      * dos mintermos que faz distancia hamming de 1 com o <b>base</b> deve ser
-     * obtido, o metodo retorna o indice, no mapa de Karnaugh, desse outro mintermo.
+     * obtido, o metodo retorna o indice, no mapa de Karnaugh, do mintermo que
+     * faz distancia hamming de 1 com o <b>base</b>.
      * 
      * <p>Ilustracao:</p>
      * <p>Mapa de Karnaugh bidimensional:</p>
@@ -216,7 +217,8 @@ public class KarnaughMap
      * <p>Mapa de Karnaugh unidimensional equivalente: { 1, 0, 1, 0 }</p>
      * <p>Considerando que a linha 0 e' a primeira, as linhas impares do mapa
      * ficam invertidas no arranjo. Isso e' consequencia da organizacao do mapa
-     * no arranjo que e' feita de acordo com a sequencia de gray:</p>
+     * no arranjo que e' feita na mesma ordem em que os numeros da sequencia de
+     * gray sao formados:</p>
      * 
      * <ul style="list-style-type: none">
      *  <li>00</li>
@@ -224,6 +226,14 @@ public class KarnaughMap
      *  <li>11</li>
      *  <li>10</li>
      * </ul>
+     * 
+     * <p>Dessa forma, ao executar getMintermThatDoesHD1With(0, 1), voce esta
+     * buscando o indice do segundo mintermo que faz distancia hamming de 1 com
+     * o mintermo no indice 0. No contexto criado, o mintermo no indice 0 e' o
+     * 00 e o primeiro mintermo que faz distancia hamming de 1 com ele e' o
+     * ultimo da sequencia de gray (10), ou seja, a funcao retornaria 3, que e'
+     * o indice dele. Como a sequencia de gray tem apenas 2 bits, cada mintermo
+     * tem apenas 2 outros mintermos que fazem distancia hamming de 1 com ele.</p>
      * 
      * @param mintermIndex indice do mintermo <b>base</b>
      * @param nthHD1Minterm referencia para qual dos mintermos que faz distancia
@@ -249,7 +259,7 @@ public class KarnaughMap
     }
     
     /**
-     * Transforma o indice do mintermo para as coordenadas equivalente no mapa
+     * Transforma o indice do mintermo para as coordenadas equivalentes no mapa
      * de Karnaugh bidimensional e checa se no ponto exato existe o valor '1' ou
      * 'x'.
      * 
@@ -312,14 +322,13 @@ public class KarnaughMap
     
     private int[] checkIfAllMintermsHasNthHD1Minterm(int[] mintermsGroup, int nthHD1Minterm)
     {
-        int i;
         int[] newGroup = new int[mintermsGroup.length];
         Arrays.fill(newGroup, -1);
         int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
         int indexOfNthHD1Minterm;
         boolean allMintermsHasNthHD1Minterm = 0 < numberOfElements;
         
-        for (i = 0; allMintermsHasNthHD1Minterm && i < numberOfElements; i++)
+        for (int i = 0; allMintermsHasNthHD1Minterm && i < numberOfElements; i++)
         {
             indexOfNthHD1Minterm = getMintermThatDoesHD1With(mintermsGroup[i], nthHD1Minterm);
             allMintermsHasNthHD1Minterm = mintermMakesFuncReturnTrueOrIsADontCare(indexOfNthHD1Minterm);
@@ -332,7 +341,6 @@ public class KarnaughMap
         
         if (!allMintermsHasNthHD1Minterm)
         {
-            //Arrays.fill(newGroup, numberOfElements, numberOfElements + i, -1);
             newGroup = mintermsGroup;
         }
         
