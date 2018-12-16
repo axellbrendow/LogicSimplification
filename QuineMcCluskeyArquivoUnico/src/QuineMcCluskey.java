@@ -1009,8 +1009,18 @@ public class QuineMcCluskey
                     expression += variablesNames[i] + ".";
                 }
             }
+        
+            int length = expression.length();
+
+            if (length > 0)
+            {
+                expression = expression.substring(0, length - 1);
+            }
             
-            expression = expression.substring(0, expression.length() - 1);
+            else
+            {
+                expression = "1";
+            }
             
             return expression;
         }
