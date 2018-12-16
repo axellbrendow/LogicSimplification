@@ -385,26 +385,6 @@ public class KarnaughMap
         return newGroup;
     }
     
-    private int getCorrespondingDecimal(int mintermIndex)
-    {
-        int[] mintermCoords = convertTo2D(mintermIndex);
-        
-        return decimalMintermsMap[ mintermCoords[0] ][ mintermCoords[1] ];
-    }/*
-    
-    private int[] getCorrespondingDecimals(int[] mintermsGroup)
-    {
-        int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
-        int[] decimals = new int[numberOfElements];
-        
-        for (int i = 0; i < numberOfElements; i++)
-        {
-            decimals[i] = getCorrespondingDecimal( mintermsGroup[i] );
-        }
-        
-        return decimals;
-    }*/
-    
     private int getNumberOfNotUsedMinterms(int[] mintermsIndexes)
     {
         int numberOfNotUsedMinterms = 0;
@@ -827,7 +807,52 @@ public class KarnaughMap
             }
         }
     }
-
+    
+    private int getCorrespondingDecimal(int mintermIndex)
+    {
+        int[] mintermCoords = convertTo2D(mintermIndex);
+        
+        return decimalMintermsMap[ mintermCoords[0] ][ mintermCoords[1] ];
+    }
+    
+    private int[] getCorrespondingDecimals(int[] mintermsGroup)
+    {
+        int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
+        int[] decimals = new int[numberOfElements];
+        
+        for (int i = 0; i < numberOfElements; i++)
+        {
+            decimals[i] = getCorrespondingDecimal( mintermsGroup[i] );
+        }
+        
+        return decimals;
+    }
+    
+    private void printGroup(TableLine group)
+    {
+        String groupStr;
+        int[] mintermsAsDecimal = getCorrespondingDecimals(group.mintermsAsDecimal);
+        
+        groupStr = "{ " + mintermsAsDecimal[0];
+        
+        for (int i = 1; i < mintermsAsDecimal.length; i++)
+        {
+            groupStr += ", " + mintermsAsDecimal[i];
+        }
+        
+        groupStr += " }";
+        
+        IO.println(groupStr + " " + TableLine.getBinaryRepresentation(group.mintermAsBinary));
+    }
+    
+    public void printGroups()
+    {
+        for (int i = 0; i < groupsTable.numberOfLines; i++)
+        {
+            printGroup(groupsTable.table[i]);
+        }
+    }
+    
     /**
      * Imprime as estatisticas de grupos de mintermos formados.
      */

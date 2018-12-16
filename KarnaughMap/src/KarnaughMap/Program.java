@@ -33,11 +33,11 @@ public class Program
         IO.println("\nMapa de Karnaugh:\n");
         karnaughMap.printMapWithLogicValues();
         IO.println("");
-        karnaughMap.printMapWithMintermsAsDecimal();/*
+        karnaughMap.printMapWithMintermsAsDecimal();
         
-        IO.println("\nGrupos:\n");*/
-        karnaughMap.groupMinterms();/*
-        karnaughMap.printGroups();*/
+        IO.println("\nGrupos:\n");
+        karnaughMap.groupMinterms();
+        karnaughMap.printGroups();
         
         IO.println("\nEstatisticas:\n");
         karnaughMap.printStatistics();
