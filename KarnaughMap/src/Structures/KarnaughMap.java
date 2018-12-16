@@ -400,17 +400,23 @@ public class KarnaughMap
         int currentSize = 1;
         int newSize;
         
+        // adiciona o primeiro mintermo do grupo, o mintermo base.
         mintermsGroup[0] = convertTo1D(mintermLine, mintermColumn);
         
-        for (int i = nthHD1Minterm; i < numberOfVariables; i++)
+        // checa se o mintermo base tem o mintermo que faz distancia hamming de
+        // 1 com ele
+        if (hasMintermThatDoesHD1(mintermsGroup[0], nthHD1Minterm))
         {
-            mintermsGroup = checkIfAllMintermsHasNthHD1Minterm(mintermsGroup, i);
-            newSize = Array.getNumberOfElementsOf(mintermsGroup);
-            
-            if (newSize > currentSize)
+            for (int i = nthHD1Minterm; i < numberOfVariables; i++)
             {
-                currentSize = newSize;
-                mintermAsBinary[numberOfVariables - 1 - i] = '_';
+                mintermsGroup = checkIfAllMintermsHasNthHD1Minterm(mintermsGroup, i);
+                newSize = Array.getNumberOfElementsOf(mintermsGroup);
+
+                if (newSize > currentSize)
+                {
+                    currentSize = newSize;
+                    mintermAsBinary[numberOfVariables - 1 - i] = '_';
+                }
             }
         }
         
@@ -473,7 +479,7 @@ public class KarnaughMap
         int numberOfColumns = getNumberOfColumns();
         int mintermIndex;
         int[] indexesOfMintermsOfTheGroup;
-        int[] usedMinterms = new int[getTotalNumberOfCombinationsBetweenVariables()];
+        int[] usedMinterms = new int[(int) Math.pow(getTotalNumberOfCombinationsBetweenVariables(), 2)];
         Arrays.fill(usedMinterms, -1);
         int counterOfUsedMinterms = 0;
         
@@ -494,6 +500,8 @@ public class KarnaughMap
                                 indexesOfMintermsOfTheGroup, 0,
                                 usedMinterms, counterOfUsedMinterms,
                                 indexesOfMintermsOfTheGroup.length);
+                        
+                        counterOfUsedMinterms += indexesOfMintermsOfTheGroup.length;
                     }
                 }
             }
