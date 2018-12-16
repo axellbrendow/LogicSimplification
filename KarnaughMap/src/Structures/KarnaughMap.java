@@ -15,6 +15,7 @@ public class KarnaughMap
     int[][] decimalMintermsMap;
     String[] variablesNames;
     MintermTable groupsTable;
+    int[] usedMinterms;
     int[] statistics;
     
     public KarnaughMap(MintermTable mintermTable, String[] variablesNames)
@@ -37,6 +38,7 @@ public class KarnaughMap
             char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
             mintermsMap = new char[graySequence1.length][graySequence2.length];
             decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
+            usedMinterms = new int[(int) Math.pow(getTotalNumberOfCombinationsBetweenVariables(), 2)];
             char[] currentMinterm;
             int grayIndex;
 
@@ -260,6 +262,38 @@ public class KarnaughMap
     
     /**
      * Transforma o indice do mintermo para as coordenadas equivalentes no mapa
+     * de Karnaugh bidimensional e retorna o caractere que esta' na posicao do
+     * mintermo.
+     * 
+     * @param mintermIndex indice do mintermo a ser analisado
+     * 
+     * @return O caractere que esta' na posicao do mintermo.
+     */
+    
+    private char getLogicValue(int mintermIndex)
+    {
+        int[] coordsOfHD1Minterm = convertTo2D(mintermIndex);
+        
+        return mintermsMap[ coordsOfHD1Minterm[0] ][ coordsOfHD1Minterm[1] ];
+    }
+    
+    /**
+     * Transforma o indice do mintermo para as coordenadas equivalentes no mapa
+     * de Karnaugh bidimensional e checa se no ponto exato existe o valor 'x'.
+     * 
+     * @param mintermIndex indice do mintermo a ser analisado
+     * 
+     * @return {@code true} se no ponto do mintermo existir o valor 'x'. Caso
+     * contrario, {@code false}.
+     */
+    
+    private boolean mintermIsADontCare(int mintermIndex)
+    {
+        return getLogicValue(mintermIndex) == 'x';
+    }
+    
+    /**
+     * Transforma o indice do mintermo para as coordenadas equivalentes no mapa
      * de Karnaugh bidimensional e checa se no ponto exato existe o valor '1' ou
      * 'x'.
      * 
@@ -271,8 +305,7 @@ public class KarnaughMap
     
     private boolean mintermMakesFuncReturnTrueOrIsADontCare(int mintermIndex)
     {
-        int[] coordsOfHD1Minterm = convertTo2D(mintermIndex);
-        char logicValue = mintermsMap[ coordsOfHD1Minterm[0] ][ coordsOfHD1Minterm[1] ];
+        char logicValue = getLogicValue(mintermIndex);
         
         return logicValue == '1' || logicValue == 'x';
     }
@@ -357,7 +390,7 @@ public class KarnaughMap
         int[] mintermCoords = convertTo2D(mintermIndex);
         
         return decimalMintermsMap[ mintermCoords[0] ][ mintermCoords[1] ];
-    }
+    }/*
     
     private int[] getCorrespondingDecimals(int[] mintermsGroup)
     {
@@ -370,6 +403,22 @@ public class KarnaughMap
         }
         
         return decimals;
+    }*/
+    
+    private int getNumberOfNotUsedMinterms(int[] mintermsIndexes)
+    {
+        int numberOfNotUsedMinterms = 0;
+        
+        for (int mintermIndex : mintermsIndexes)
+        {
+            if (!mintermIsADontCare(mintermIndex) &&
+                    Array.indexOf(mintermIndex, usedMinterms) == -1)
+            {
+                numberOfNotUsedMinterms++;
+            }
+        }
+        
+        return numberOfNotUsedMinterms;
     }
     
     /**
@@ -445,6 +494,8 @@ public class KarnaughMap
     {
         int numberOfVariables = getNumberOfVariables();
         int[] mintermsAsDecimal = { decimalMintermsMap[mintermLine][mintermColumn] };
+        int currentNumberOfNotUsedMinterms;
+        int greatestNumberOfNotUsedMinterms = 1;
         int currentNumberOfSimplifications;
         int greatestNumberOfSimplifications = 0;
         
@@ -459,13 +510,21 @@ public class KarnaughMap
         for (int i = 0; i < numberOfVariables; i++)
         {
             currentGroup = getMintermGroup(mintermLine, mintermColumn, i);
+            currentNumberOfNotUsedMinterms = getNumberOfNotUsedMinterms(currentGroup.mintermsAsDecimal);
             currentNumberOfSimplifications = Array.countChars('_', currentGroup.mintermAsBinary);
+            
+            if (currentNumberOfNotUsedMinterms > greatestNumberOfNotUsedMinterms)
+            {
+                greatestGroup = currentGroup;
+                greatestNumberOfNotUsedMinterms = currentNumberOfNotUsedMinterms;
+                greatestNumberOfSimplifications = currentNumberOfSimplifications;
+            }/*
             
             if (currentNumberOfSimplifications > greatestNumberOfSimplifications)
             {
                 greatestGroup = currentGroup;
                 greatestNumberOfSimplifications = currentNumberOfSimplifications;
-            }
+            }*/
         }
         
         statistics[greatestNumberOfSimplifications]++;
@@ -479,7 +538,6 @@ public class KarnaughMap
         int numberOfColumns = getNumberOfColumns();
         int mintermIndex;
         int[] indexesOfMintermsOfTheGroup;
-        int[] usedMinterms = new int[(int) Math.pow(getTotalNumberOfCombinationsBetweenVariables(), 2)];
         Arrays.fill(usedMinterms, -1);
         int counterOfUsedMinterms = 0;
         
