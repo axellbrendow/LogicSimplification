@@ -219,6 +219,47 @@ public class MintermTable
     }
 
     /**
+     * Procura um mintermo por toda a tabela e vai guardando em pares os
+     * indices das linhas e colunas, respectivamente, onde ele for
+     * encontrado. Caso nao seja encontrado, a funcao retorna uma matriz
+     * com 0 linhas.
+     * 
+     * @param minterm mintermo a ser procurado
+     * 
+     * @return Matriz em que cada linha tem um par de indices que representa
+     * a linha e a coluna onde o mintermo foi encontrado. A matriz tera' <i>n</i>
+     * linhas e 2 colunas, sendo <i>n</i> a quantidade de vezes que o mintermo foi
+     * encontrado.
+     */
+
+    public int[][] indexesOf(int minterm)
+    {
+        int column;
+        int[][] indexes = new int[numberOfLines][2];
+        int indexesCounter = 0;
+
+        for (int i = 0; i < numberOfLines; i++)
+        {
+            column = Array.indexOf(minterm, table[i].mintermsAsDecimal);
+
+            if (column != -1)
+            {
+                indexes[indexesCounter][0] = i;
+                indexes[indexesCounter++][1] = column;
+            }
+        }
+
+        int[][] definitiveIndexes = new int[indexesCounter][2];
+
+        for (int i = 0; i < indexesCounter; i++)
+        {
+            System.arraycopy(indexes[i], 0, definitiveIndexes[i], 0, 2);
+        }
+
+        return definitiveIndexes;
+    }
+
+    /**
      * Imprime a tabela no seguinte formato:
      * 
      * <p></p>
