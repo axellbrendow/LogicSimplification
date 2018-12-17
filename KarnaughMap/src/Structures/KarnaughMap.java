@@ -383,7 +383,7 @@ public class KarnaughMap
         }
         
         return newGroup;
-    }
+    }/*
     
     private int getNumberOfNotUsedMinterms(int[] mintermsIndexes)
     {
@@ -415,7 +415,7 @@ public class KarnaughMap
         }
         
         return dontCaresCount;
-    }
+    }*/
     
     /**
      * Tenta formar um grupo de mintermos. O primeiro mintermo, <b>base</b>, e' o
@@ -472,15 +472,25 @@ public class KarnaughMap
         return new TableLine(smallerGroup, mintermAsBinary);
     }
     
+    /**
+     * Decide qual grupo de mintermos, {@code group1} ou {@code group2}, e'
+     * melhor para a simplificacao final.
+     * 
+     * @param group1 primeiro grupo
+     * @param group2 segundo grupo
+     * 
+     * @return O grupo que for melhor.
+     */
+    
     private TableLine getBestGroup(TableLine group1, TableLine group2)
     {
         TableLine bestGroup = group1;
         int numberOfSimplificationsOfGroup1 = Array.countChars('_', group1.mintermAsBinary);
-        int numberOfSimplificationsOfGroup2 = Array.countChars('_', group2.mintermAsBinary);
+        int numberOfSimplificationsOfGroup2 = Array.countChars('_', group2.mintermAsBinary);/*
         int numberOfNotUsedMintermsOfGroup1 = getNumberOfNotUsedMinterms(group1.mintermsAsDecimal);
         int numberOfNotUsedMintermsOfGroup2 = getNumberOfNotUsedMinterms(group2.mintermsAsDecimal);
         int numberOfDontCaresOfGroup1 = countDontCares(group1);
-        int numberOfDontCaresOfGroup2 = countDontCares(group2);
+        int numberOfDontCaresOfGroup2 = countDontCares(group2);*/
         int pointsOfGroup1 = 0;
         int pointsOfGroup2 = 0;
         
@@ -502,7 +512,7 @@ public class KarnaughMap
         else if (numberOfNotUsedMintermsOfGroup2 > numberOfNotUsedMintermsOfGroup1)
         {
             pointsOfGroup2 += 30;
-        }*/
+        }
         
         if (numberOfDontCaresOfGroup1 < numberOfDontCaresOfGroup2)
         {
@@ -512,7 +522,7 @@ public class KarnaughMap
         else if (numberOfDontCaresOfGroup2 < numberOfDontCaresOfGroup1)
         {
             pointsOfGroup2 += 30;
-        }
+        }*/
         
         if (pointsOfGroup2 > pointsOfGroup1)
         {
@@ -539,15 +549,8 @@ public class KarnaughMap
     private TableLine getMintermBestGroup(int mintermLine, int mintermColumn)
     {
         int numberOfVariables = getNumberOfVariables();
-        int[] mintermsAsDecimal = { decimalMintermsMap[mintermLine][mintermColumn] };/*
-        int currentNumberOfSimplifications;
-        int greatestNumberOfSimplifications = 0;
-        int currentNumberOfNotUsedMinterms;
-        int greatestNumberOfNotUsedMinterms = 1;
-        int currentNumberOfDontCares;
-        int smallestNumberOfDontCares = 0;*/
+        int[] mintermsAsDecimal = { decimalMintermsMap[mintermLine][mintermColumn] };
         
-        //TableLine currentGroup;
         TableLine bestGroup =
                 new TableLine
                 (
@@ -558,37 +561,6 @@ public class KarnaughMap
         for (int i = 0; i < numberOfVariables; i++)
         {
             bestGroup = getBestGroup(getMintermGroup(mintermLine, mintermColumn, i), bestGroup);
-            /*currentGroup = getMintermGroup(mintermLine, mintermColumn, i);
-            currentNumberOfSimplifications = Array.countChars('_', currentGroup.mintermAsBinary);
-            currentNumberOfNotUsedMinterms = getNumberOfNotUsedMinterms(currentGroup.mintermsAsDecimal);
-            currentNumberOfDontCares = countDontCares(currentGroup);
-            
-            if (currentNumberOfDontCares > 0)
-            {
-                if (currentNumberOfNotUsedMinterms > greatestNumberOfNotUsedMinterms)
-                {
-                    bestGroup = currentGroup;
-                    greatestNumberOfNotUsedMinterms = currentNumberOfNotUsedMinterms;
-                    greatestNumberOfSimplifications = currentNumberOfSimplifications;
-                }
-
-                else if (currentNumberOfNotUsedMinterms == greatestNumberOfNotUsedMinterms &&
-                        currentNumberOfSimplifications > greatestNumberOfSimplifications)
-                {
-                    bestGroup = currentGroup;
-                    greatestNumberOfSimplifications = currentNumberOfSimplifications;
-                }
-            }
-            
-            else
-            {
-                if (currentNumberOfSimplifications > greatestNumberOfSimplifications)
-                {
-                    bestGroup = currentGroup;
-                    greatestNumberOfNotUsedMinterms = currentNumberOfNotUsedMinterms;
-                    greatestNumberOfSimplifications = currentNumberOfSimplifications;
-                }
-            }*/
         }
         
         statistics[Array.countChars('_', bestGroup.mintermAsBinary)]++;
@@ -596,58 +568,91 @@ public class KarnaughMap
         return bestGroup;
     }
     
-    private boolean allMintermsOfTheGroupWereUsed(TableLine mintermGroup, MintermTable tableOfGroupsOfMinterms)
+    /**
+     * Checa se todos os mintermos do grupo {@code mintermGroup} ja' foram
+     * usados em outros grupos da tabela {@code tableOfGroupsOfMinterms}. Tambem
+     * e' possivel informar os indices das linhas da tabela que devem ser
+     * ignoradas.
+     * 
+     * <p>Obs.: don't cares sao ignorados.</p>
+     * 
+     * @param mintermGroup grupo de mintermos
+     * @param tableOfGroupsOfMinterms tabela de grupos de mintermos
+     * @param groupsToIgnore indices das linhas da tabela que devem ser
+     * ignoradas
+     * 
+     * @return {@code true} se todos os mintermos do grupo {@code mintermGroup}
+     * ja' foram usados em outros grupos da tabela
+     * {@code tableOfGroupsOfMinterms}.
+     */
+    
+    private boolean allMintermsOfTheGroupWereUsed(TableLine mintermGroup, MintermTable tableOfGroupsOfMinterms, int[] groupsToIgnore)
     {
         int[] mintermsAsDecimal = mintermGroup.mintermsAsDecimal;
-        boolean found = ( tableOfGroupsOfMinterms.indexesOf(mintermsAsDecimal[0]).length > 1 );
+        boolean found = true;
 
         // percorre os mintermos do grupo checando se eles existem em outros grupos
-        for (int i = 1; found && i < mintermsAsDecimal.length; i++)
+        for (int i = 0; found && i < mintermsAsDecimal.length; i++)
         {
-            found = ( tableOfGroupsOfMinterms.indexesOf(mintermsAsDecimal[i]).length > 1 );
+            // don't cares sao ignorados
+            if (!mintermIsADontCare(mintermsAsDecimal[i]))
+            {
+                found = ( tableOfGroupsOfMinterms.indexesOf(mintermsAsDecimal[i], groupsToIgnore).length > 1 );
+            }
         }
         
         return found;
     }
     
+    /**
+     * Cria uma nova {@code MintermTable} com todos os grupos em que nem todos
+     * os mintermos tenham sido usados em outros grupos da tabela
+     * {@code tableOfGroupsOfMinterms}.
+     * 
+     * @param tableOfGroupsOfMinterms tabela de grupos de mintermos
+     * 
+     * @return Uma nova {@code MintermTable} com todos os grupos em que nem
+     * todos os mintermos tenham sido usados em outros grupos da tabela
+     * {@code tableOfGroupsOfMinterms}.
+     */
+    
     private MintermTable removeGroupsThatAllMintermsWereUsed(MintermTable tableOfGroupsOfMinterms)
     {
-        MintermTable definitiveTable = tableOfGroupsOfMinterms;
+        MintermTable newMintermTable = tableOfGroupsOfMinterms;
         
         if (tableOfGroupsOfMinterms != null && tableOfGroupsOfMinterms.numberOfLines > 0)
         {
             TableLine[] oldTable = tableOfGroupsOfMinterms.table;
             int oldTableLength = tableOfGroupsOfMinterms.numberOfLines;
             TableLine tableLine;
-            MintermTable newMintermTable = new MintermTable(oldTableLength);
+            newMintermTable = new MintermTable(oldTableLength);
+            int[] groupsToIgnore = new int[oldTableLength];
+            Arrays.fill(groupsToIgnore, -1);
+            int counterOfGroupsToIgnore = 0;
             
-            for (int i = oldTableLength - 1; i > -1; i--)
+            for (int i = 0; i < oldTableLength; i++)
             {
                 tableLine = oldTable[i];
                 
-                if (!allMintermsOfTheGroupWereUsed(tableLine, tableOfGroupsOfMinterms))
+                if (!allMintermsOfTheGroupWereUsed(tableLine, tableOfGroupsOfMinterms, groupsToIgnore))
                 {
                     newMintermTable.addLine(tableLine);
                 }
                 
                 else
                 {
+                    groupsToIgnore[counterOfGroupsToIgnore++] = i;
                     statistics[ Array.countChars('_', tableLine.mintermAsBinary) ]--;
                 }
             }
-            
-            int numberOfLines = newMintermTable.numberOfLines;
-            definitiveTable = new MintermTable(numberOfLines);
-            definitiveTable.isPossibleToSimplify = tableOfGroupsOfMinterms.isPossibleToSimplify;
-            
-            for (int i = 0; i < numberOfLines; i++)
-            {
-                definitiveTable.addLine(newMintermTable.table[numberOfLines - 1 - i]);
-            }
         }
         
-        return definitiveTable;
+        return newMintermTable;
     }
+    
+    /**
+     * Percorre o mapa de Karnaugh formando os melhores grupos.
+     */
     
     public void groupMinterms()
     {
