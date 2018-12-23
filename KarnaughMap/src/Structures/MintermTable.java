@@ -244,7 +244,7 @@ public class MintermTable
 
         for (int i = 0; i < numberOfLines; i++)
         {
-            if (Array.indexOf(i, linesToIgnore) == -1)
+            if (!Array.contains(i, linesToIgnore))
             {
                 column = Array.indexOf(minterm, table[i].mintermsAsDecimal);
 
@@ -255,15 +255,8 @@ public class MintermTable
                 }
             }
         }
-
-        int[][] definitiveIndexes = new int[indexesCounter][2];
-
-        for (int i = 0; i < indexesCounter; i++)
-        {
-            System.arraycopy(indexes[i], 0, definitiveIndexes[i], 0, 2);
-        }
-
-        return definitiveIndexes;
+        
+        return Array.fit(indexes, indexesCounter);
     }
 
     /**

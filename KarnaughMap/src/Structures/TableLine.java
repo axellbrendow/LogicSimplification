@@ -1,5 +1,6 @@
 package Structures;
 
+import Util.Array;
 import Util.IO;
 
 /**
@@ -10,13 +11,40 @@ public class TableLine
 {
     int[] mintermsAsDecimal;
     char[] mintermAsBinary;
+    // guardara' as referencias para qual dos mintermos que fazem distancia
+    // hamming com o mintermo base do grupo foram usados
+    int[] nthHDMinterms;
+
+    public TableLine(int[] mintermsAsDecimal, char[] mintermAsBinary, int[] nthHDMinterms)
+    {
+        this.mintermsAsDecimal = mintermsAsDecimal;
+        this.mintermAsBinary = mintermAsBinary;
+        this.nthHDMinterms = nthHDMinterms;
+    }
 
     public TableLine(int[] mintermsAsDecimal, char[] mintermAsBinary)
     {
         this.mintermsAsDecimal = mintermsAsDecimal;
         this.mintermAsBinary = mintermAsBinary;
     }
-
+    
+    /**
+     * Obtem o numero de mintermos do grupo que fazem distancia hamming com o
+     * mintermo base do grupo.
+     * 
+     * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
+     * do parametro passado para o metodo groupMinterms(GroupingType) da classe
+     * KarnaughMap.</p>
+     * 
+     * @return Numero de mintermos do grupo que fazem distancia hamming com o
+     * mintermo base do grupo.
+     */
+    
+    public int getNumberOfNthHDMinterms()
+    {
+        return Array.getNumberOfElementsOf(nthHDMinterms);
+    }
+    
     /**
      * Recebe um numero binario que esta' armazenado no modo little endian
      * e retorna uma string com o numero no modo big endian.

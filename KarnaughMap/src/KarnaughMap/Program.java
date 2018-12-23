@@ -41,13 +41,13 @@ public class Program
         karnaughMap.printMapWithMintermsAsDecimal();
         
         IO.println("\nGrupos:\n");
-        karnaughMap.groupMinterms();
+        karnaughMap.groupMinterms(KarnaughMap.GroupingType.HD2);
         karnaughMap.printGroups();
         
         IO.println("\nEstatisticas:\n");
-        karnaughMap.printStatistics();
+        karnaughMap.printStatistics();/*
 
         IO.println("\nExpressao final:\n");
-        karnaughMap.printExpression();
+        karnaughMap.printExpression();*/
     }
 }
