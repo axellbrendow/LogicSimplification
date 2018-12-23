@@ -2,6 +2,7 @@ package Structures;
 
 import Util.Array;
 import Util.IO;
+import java.util.Arrays;
 
 /**
  * @author Axell Brendow (https://github.com/axell-brendow)
@@ -14,18 +15,26 @@ public class TableLine
     // guardara' as referencias para qual dos mintermos que fazem distancia
     // hamming com o mintermo base do grupo foram usados
     int[] nthHDMinterms;
-
-    public TableLine(int[] mintermsAsDecimal, char[] mintermAsBinary, int[] nthHDMinterms)
+    int numberOfReflectionsByHD1;
+    int numberOfReflectionsByHD2;
+    
+    public TableLine(int[] mintermsAsDecimal, char[] mintermAsBinary, int[] nthHDMinterms, int numberOfReflectionsByHD1, int numberOfReflectionsByHD2)
     {
         this.mintermsAsDecimal = mintermsAsDecimal;
         this.mintermAsBinary = mintermAsBinary;
         this.nthHDMinterms = nthHDMinterms;
+        this.numberOfReflectionsByHD1 = numberOfReflectionsByHD1;
+        this.numberOfReflectionsByHD2 = numberOfReflectionsByHD2;
+    }
+    
+    public TableLine(int[] mintermsAsDecimal, char[] mintermAsBinary, int[] nthHDMinterms)
+    {
+        this(mintermsAsDecimal, mintermAsBinary, nthHDMinterms, 0, 0);
     }
 
     public TableLine(int[] mintermsAsDecimal, char[] mintermAsBinary)
     {
-        this.mintermsAsDecimal = mintermsAsDecimal;
-        this.mintermAsBinary = mintermAsBinary;
+        this(mintermsAsDecimal, mintermAsBinary, new int[0]);
     }
     
     /**
@@ -33,7 +42,7 @@ public class TableLine
      * mintermo base do grupo.
      * 
      * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingType) da classe
+     * do parametro passado para o metodo groupMinterms(GroupingMode) da classe
      * KarnaughMap.</p>
      * 
      * @return Numero de mintermos do grupo que fazem distancia hamming com o
@@ -43,6 +52,11 @@ public class TableLine
     public int getNumberOfNthHDMinterms()
     {
         return Array.getNumberOfElementsOf(nthHDMinterms);
+    }
+    
+    public int getNumberOfElements()
+    {
+        return Array.getNumberOfElementsOf(mintermsAsDecimal);
     }
     
     /**

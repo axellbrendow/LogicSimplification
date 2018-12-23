@@ -205,6 +205,35 @@ public class Array
      * todos os elementos do segundo.
      */
     
+    public static int[] concatArrays(int[] array1, int[] array2)
+    {
+        int[] newArray = new int[array1.length + array2.length];
+        int counterOfTheNewArray = 0;
+
+        for (int i = 0; i < array1.length; i++)
+        {
+            newArray[counterOfTheNewArray++] = array1[i];
+        }
+
+        for (int i = 0; i < array2.length; i++)
+        {
+            newArray[counterOfTheNewArray++] = array2[i];
+        }
+
+        return newArray;
+    }
+    
+    /**
+     * Cria um novo arranjo com todos os elementos do primeiro e, logo apos, todos
+     * os elementos do segundo.
+     * 
+     * @param array1 primeiro arranjo
+     * @param array2 segundo arranjo
+     * 
+     * @return Um novo arranjo com todos os elementos do primeiro e, logo apos,
+     * todos os elementos do segundo.
+     */
+    
     public static char[] concatArrays(char[] array1, char[] array2)
     {
         char[] newArray = new char[array1.length + array2.length];

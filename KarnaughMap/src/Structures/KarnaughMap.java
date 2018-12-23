@@ -14,12 +14,12 @@ public class KarnaughMap
     char[][] mintermsMap;
     int[][] decimalMintermsMap;
     String[] variablesNames;
-    GroupingType groupingType;
+    GroupingMode groupingMode;
     MintermTable groupsTable;
     int[] usedMinterms;
     int[] statistics;
     
-    public enum GroupingType
+    public enum GroupingMode
     {
         HD1,
         HD2
@@ -109,6 +109,16 @@ public class KarnaughMap
         return Array.concatArrays(graySequence2[mintermColumn], graySequence1[mintermLine]);
     }
     
+    private boolean hasGraySequences()
+    {
+        return graySequence1 != null && graySequence2 != null;
+    }
+    
+    private boolean hasVariablesNames()
+    {
+        return variablesNames != null;
+    }
+    
     private int getNumberOfLines()
     {
         return graySequence1.length;
@@ -148,7 +158,7 @@ public class KarnaughMap
     {
         int numberOfHDMinterms;
         
-        switch (groupingType)
+        switch (groupingMode)
         {
             case HD1:
                 numberOfHDMinterms = getNumberOfVariables();
@@ -304,7 +314,7 @@ public class KarnaughMap
      * indice {@code mintermIndex}.
      * 
      * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingType) da classe
+     * do parametro passado para o metodo groupMinterms(GroupingMode) da classe
      * KarnaughMap.</p>
      * 
      * @param mintermIndex indice do mintermo <b>base</b>
@@ -319,7 +329,7 @@ public class KarnaughMap
     {
         int HDMinterm;
         
-        switch (groupingType)
+        switch (groupingMode)
         {
             case HD1:
                 HDMinterm = getMintermThatDoesHD1With(mintermIndex, nthHDMinterm);
@@ -439,32 +449,6 @@ public class KarnaughMap
     }
     
     /**
-     * Dentre os mintermos que fazem distancia hamming com o mintermo
-     * <b>base</b>, que e' o mintermo do indice {@code mintermIndex}, checa se
-     * o que e' referenciado por {@code nthHDMinterm} faz a funcao logica
-     * retornar 1 ou e' um don't care.
-     * 
-     * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingType) da classe
-     * KarnaughMap.</p>
-     * 
-     * @param mintermIndex indice do mintermo <b>base</b>
-     * @param nthHDMinterm referencia para qual dos mintermos que faz distancia
-     * hamming com o <b>base</b> deve ser procurado
-     * 
-     * @return {@code true} se o mintermo referenciado por {@code nthHDMinterm}
-     * faz a funcao logica retornar 1 ou e' um don't care. Caso contrario,
-     * {@code false}.
-     */
-    
-    private boolean hasMintermThatDoesHD(int mintermIndex, int nthHDMinterm)
-    {
-        int indexOfHDMinterm = getMintermThatDoesHDWith(mintermIndex, nthHDMinterm);
-        
-        return mintermMakesFuncReturnTrueOrIsADontCare(indexOfHDMinterm);
-    }
-    
-    /**
      * Percorre o arranjo de indices dos mintermos participantes do grupo
      * ({@code mintermsGroup}) e ve se todos esses mintermos tem o mintermo que
      * faz distancia hamming com eles.
@@ -474,7 +458,7 @@ public class KarnaughMap
      * preenchidas com valores -1.</p>
      * 
      * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingType) da classe
+     * do parametro passado para o metodo groupMinterms(GroupingMode) da classe
      * KarnaughMap.</p>
      * 
      * @param mintermsGroup arranjo de indices dos mintermos participantes do
@@ -491,16 +475,18 @@ public class KarnaughMap
     
     private int[] checkIfAllMintermsHasNthHDMinterm(int[] mintermsGroup, int nthHDMinterm)
     {
-        int[] newGroup = new int[mintermsGroup.length];
+        int numberOfElements = mintermsGroup.length;
+        int[] newGroup = new int[numberOfElements * 2];
         Arrays.fill(newGroup, -1);
-        int numberOfElements = Array.getNumberOfElementsOf(mintermsGroup);
         int indexOfNthHDMinterm;
         boolean allMintermsHasNthHDMinterm = 0 < numberOfElements;
         
         for (int i = 0; allMintermsHasNthHDMinterm && i < numberOfElements; i++)
         {
             indexOfNthHDMinterm = getMintermThatDoesHDWith(mintermsGroup[i], nthHDMinterm);
-            allMintermsHasNthHDMinterm = mintermMakesFuncReturnTrueOrIsADontCare(indexOfNthHDMinterm);
+            allMintermsHasNthHDMinterm =
+                    mintermMakesFuncReturnTrueOrIsADontCare(indexOfNthHDMinterm) &&
+                    !Array.contains(indexOfNthHDMinterm, mintermsGroup);
             
             if (allMintermsHasNthHDMinterm)
             {
@@ -535,7 +521,7 @@ public class KarnaughMap
         }
         
         return numberOfNotUsedMinterms;
-    }
+    }*/
     
     private int countDontCares(TableLine mintermsGroup)
     {
@@ -551,78 +537,6 @@ public class KarnaughMap
         }
         
         return dontCaresCount;
-    }*/
-    
-    /**
-     * Tenta formar um grupo de mintermos. O primeiro mintermo, <b>base</b>, e' o
-     * mintermo da linha {@code mintermLine} e coluna {@code mintermColumn}.
-     * O proximo mintermo e' escolhido de acordo com {@code nthHDMinterm} que
-     * indica qual dos mintermos que faz distancia hamming com o <b>base</b>
-     * deve ser escolhido. Para um mapa de Karnaugh de <b>n</b> variaveis, todos
-     * mintermos tem <b>n</b> outros mintermos que fazem distancia hamming de 1
-     * com eles. Da mesma forma, todos os mintermos tem C(<b>n</b>, 2)
-     * (combinacao de <b>n</b> tomados 2 a 2) outros mintermos que fazem
-     * distancia hamming de 2 com eles.
-     * 
-     * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingType) da classe
-     * KarnaughMap.</p>
-     * 
-     * @param mintermLine linha do primeiro mintermo do grupo
-     * @param mintermColumn coluna do primeiro mintermo do grupo
-     * @param nthHDMinterm qual dos mintermos que faz distancia hamming com o
-     * mintermo <b>base</b> deve ser o segundo ponto de partida
-     * 
-     * @return O maior grupo que pode ser formado com o mintermo base, partindo
-     * da referencia {@code nthHDMinterm}.
-     */
-    
-    private TableLine getMintermGroup(int mintermLine, int mintermColumn, int nthHDMinterm)
-    {
-        int numberOfHDMinterms = getNumberOfHDMinterms();
-        int maxGroupSize = getTotalNumberOfCombinationsBetweenVariables();
-        char[] mintermAsBinary = getCorrespondingGrayNumber(mintermLine, mintermColumn);
-        int[] mintermsGroup = new int[maxGroupSize];
-        Arrays.fill(mintermsGroup, -1);
-        int[] nthHDMinterms = new int[getNumberOfVariables()];
-        Arrays.fill(nthHDMinterms, -1);
-        int counterOfNthHDMinterms = 0;
-        int currentSize = 1;
-        int newSize;
-        boolean stop = false;
-        
-        // adiciona o primeiro mintermo do grupo, o mintermo base.
-        mintermsGroup[0] = convertTo1D(mintermLine, mintermColumn);
-        
-        // checa se o mintermo base tem o mintermo que faz distancia hamming
-        // com ele
-        if (hasMintermThatDoesHD(mintermsGroup[0], nthHDMinterm))
-        {
-            for (int i = nthHDMinterm; i < numberOfHDMinterms && !stop; i++)
-            {
-                mintermsGroup = checkIfAllMintermsHasNthHDMinterm(mintermsGroup, i);
-                newSize = Array.getNumberOfElementsOf(mintermsGroup);
-
-                if (newSize > currentSize)
-                {
-                    currentSize = newSize;
-                    nthHDMinterms[counterOfNthHDMinterms++] = i;
-                    
-                    switch (groupingType)
-                    {
-                        case HD1: // passivel de remocao
-                            mintermAsBinary[numberOfHDMinterms - 1 - i] = '_';
-                            break;
-
-                        case HD2:
-                            stop = (newSize == maxGroupSize / 2);
-                            break;
-                    }
-                }
-            }
-        }
-        
-        return new TableLine(Array.fit(mintermsGroup, currentSize), mintermAsBinary, Array.fit(nthHDMinterms, counterOfNthHDMinterms));
     }
     
     /**
@@ -641,9 +555,9 @@ public class KarnaughMap
         int numberOfSimplificationsOfGroup1 = group1.getNumberOfNthHDMinterms();
         int numberOfSimplificationsOfGroup2 = group2.getNumberOfNthHDMinterms();/*
         int numberOfNotUsedMintermsOfGroup1 = getNumberOfNotUsedMinterms(group1.mintermsAsDecimal);
-        int numberOfNotUsedMintermsOfGroup2 = getNumberOfNotUsedMinterms(group2.mintermsAsDecimal);
-        int numberOfDontCaresOfGroup1 = countDontCares(group1);
-        int numberOfDontCaresOfGroup2 = countDontCares(group2);*/
+        int numberOfNotUsedMintermsOfGroup2 = getNumberOfNotUsedMinterms(group2.mintermsAsDecimal);*/
+        int effectiveSizeOfGroup1 = group1.getNumberOfElements() - countDontCares(group1);
+        int effectiveSizeOfGroup2 = group2.getNumberOfElements() - countDontCares(group2);
         int pointsOfGroup1 = 0;
         int pointsOfGroup2 = 0;
         
@@ -665,14 +579,14 @@ public class KarnaughMap
         else if (numberOfNotUsedMintermsOfGroup2 > numberOfNotUsedMintermsOfGroup1)
         {
             pointsOfGroup2 += 30;
-        }
+        }*//*
         
-        if (numberOfDontCaresOfGroup1 < numberOfDontCaresOfGroup2)
+        if (effectiveSizeOfGroup1 > effectiveSizeOfGroup2)
         {
             pointsOfGroup1 += 30;
         }
         
-        else if (numberOfDontCaresOfGroup2 < numberOfDontCaresOfGroup1)
+        else if (effectiveSizeOfGroup2 > effectiveSizeOfGroup1)
         {
             pointsOfGroup2 += 30;
         }*/
@@ -680,6 +594,114 @@ public class KarnaughMap
         if (pointsOfGroup2 > pointsOfGroup1)
         {
             bestGroup = group2;
+        }
+        
+        return bestGroup;
+    }
+    
+    private TableLine tryToReflectGroup(TableLine baseGroup, int nthHDMinterm)
+    {
+        TableLine reflectedGroup = baseGroup;
+        
+        int[] mintermsIndexes = checkIfAllMintermsHasNthHDMinterm(baseGroup.mintermsAsDecimal, nthHDMinterm);
+        
+        if (mintermsIndexes != baseGroup.mintermsAsDecimal)
+        {
+            int[] nthHDMinterms = Array.concatArrays(baseGroup.nthHDMinterms, new int[] { nthHDMinterm });
+            int numberOfReflectionsByHD1 = baseGroup.numberOfReflectionsByHD1;
+            int numberOfReflectionsByHD2 = baseGroup.numberOfReflectionsByHD2;
+            
+            switch (groupingMode)
+            {
+                case HD1:
+                    numberOfReflectionsByHD1++;
+                    break;
+
+                case HD2:
+                    numberOfReflectionsByHD2++;
+                    break;
+            }
+            
+            reflectedGroup = new TableLine
+                            (
+                                mintermsIndexes,
+                                baseGroup.mintermAsBinary,
+                                nthHDMinterms,
+                                numberOfReflectionsByHD1,
+                                numberOfReflectionsByHD2
+                            );
+        }
+        
+        return reflectedGroup;
+    }
+    
+    /**
+     * Tenta formar um grupo de mintermos. O primeiro mintermo, <b>base</b>, e'
+     * o mintermo do indice {@code mintermIndex}. O proximo mintermo e'
+     * escolhido de acordo com {@code nthHDMinterm} que indica qual dos
+     * mintermos que faz distancia hamming com o <b>base</b> deve ser escolhido.
+     * Para um mapa de Karnaugh de <b>n</b> variaveis, todos mintermos tem
+     * <b>n</b> outros mintermos que fazem distancia hamming de 1 com eles. Da
+     * mesma forma, todos os mintermos tem C(<b>n</b>, 2) (combinacao de
+     * <b>n</b> tomados 2 a 2) outros mintermos que fazem distancia hamming de
+     * 2 com eles.
+     * 
+     * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
+     * do parametro passado para o metodo groupMinterms(GroupingMode) da classe
+     * KarnaughMap.</p>
+     * 
+     * @param mintermLine linha do primeiro mintermo do grupo
+     * @param mintermColumn coluna do primeiro mintermo do grupo
+     * @param nthHDMinterm qual dos mintermos que faz distancia hamming com o
+     * mintermo <b>base</b> deve ser o segundo ponto de partida
+     * 
+     * @return O maior grupo que pode ser formado com o mintermo base, partindo
+     * da referencia {@code nthHDMinterm}.
+     */
+    
+    private TableLine getGreatestGroupReflectingFrom(int nthHDMinterm, TableLine group)
+    {
+        boolean stop = false;
+        int numberOfHDMinterms = getNumberOfHDMinterms();
+        int maxGroupSize = getTotalNumberOfCombinationsBetweenVariables();
+        
+        for (int i = nthHDMinterm; i < numberOfHDMinterms && !stop; i++)
+        {
+            group = tryToReflectGroup(group, i);
+            
+            if (groupingMode == GroupingMode.HD2)
+            {
+                stop = ( group.getNumberOfElements() == maxGroupSize / 2 );
+            }
+        }
+        
+        return group;
+    }
+    
+    /**
+     * Tenta formar o melhor grupo de mintermos possivel sendo o mintermo da
+     * linha {@code mintermLine} e coluna {@code mintermColumn} o primeiro
+     * deles.
+     * 
+     * @param mintermLine linha do primeiro mintermo do grupo
+     * @param mintermColumn coluna do primeiro mintermo do grupo
+     * 
+     * @return {@code TableLine} em que o arranjo {@code mintermsAsDecimal} tem
+     * os indices, no mapa de Karnaugh unidimensional, de todos os mintermos
+     * participantes do grupo. Alem disso, o arranjo {@code nthHDMinterms} tera'
+     * as referencias para todos os mintermos que fazem distancia hamming com o
+     * mintermo base do grupo e que foram usados nas reflexoes do grupo pelo
+     * mapa.
+     */
+    
+    private TableLine getBestGroupReflectingAsManyAsPossible(TableLine group)
+    {
+        TableLine bestGroup = group;
+        int numberOfHDMinterms = getNumberOfHDMinterms();
+        
+        for (int i = 0; i < numberOfHDMinterms; i++)
+        {
+            bestGroup = getBestGroup(bestGroup, getGreatestGroupReflectingFrom(i, group));
         }
         
         return bestGroup;
@@ -701,20 +723,23 @@ public class KarnaughMap
     
     private TableLine getMintermBestGroup(int mintermLine, int mintermColumn)
     {
-        int numberOfHDMinterms = getNumberOfHDMinterms();
-        int[] mintermsAsDecimal = { decimalMintermsMap[mintermLine][mintermColumn] };
+        TableLine bestGroup = getBestGroupReflectingAsManyAsPossible
+        (
+            new TableLine
+            (
+                new int[] { convertTo1D(mintermLine, mintermColumn) },
+                getCorrespondingGrayNumber(mintermLine, mintermColumn)
+            )
+        );
         
-        TableLine bestGroup =
-                new TableLine
-                (
-                        mintermsAsDecimal,
-                        getCorrespondingGrayNumber(mintermLine, mintermColumn),
-                        new int[0]
-                );
-        
-        for (int i = 0; i < numberOfHDMinterms; i++)
+        if (groupingMode == GroupingMode.HD2)
         {
-            bestGroup = getBestGroup(getMintermGroup(mintermLine, mintermColumn, i), bestGroup);
+            GroupingMode copy = groupingMode;
+            this.groupingMode = GroupingMode.HD1;
+            
+            bestGroup = getBestGroupReflectingAsManyAsPossible(bestGroup);
+            
+            this.groupingMode = copy;
         }
         
         return bestGroup;
@@ -804,46 +829,51 @@ public class KarnaughMap
     /**
      * Percorre o mapa de Karnaugh formando os melhores grupos.
      * 
-     * @param groupingType informa qual sera' a prioridade de agrupamento, por
+     * @param groupingMode informa qual sera' a prioridade de agrupamento, por
      * distancia hamming de 1 ou distancia hamming de 2
      */
     
-    public void groupMinterms(GroupingType groupingType)
+    public void groupMinterms(GroupingMode groupingMode)
     {
-        this.groupingType = groupingType;
-        int numberOfLines = getNumberOfLines();
-        int numberOfColumns = getNumberOfColumns();
-        int mintermIndex;
-        int[] indexesOfMintermsOfTheGroup;
-        Arrays.fill(usedMinterms, -1);
-        int counterOfUsedMinterms = 0;
-        
-        for (int i = 0; i < numberOfLines; i++)
+        if (mintermsMap != null && groupsTable != null &&
+                usedMinterms != null && hasGraySequences())
         {
-            for (int j = 0; j < numberOfColumns; j++)
+            this.groupingMode = groupingMode;
+            int numberOfLines = getNumberOfLines();
+            int numberOfColumns = getNumberOfColumns();
+            int mintermIndex;
+            int[] indexesOfMintermsOfTheGroup;
+            Arrays.fill(usedMinterms, -1);
+            int counterOfUsedMinterms = 0;
+
+            for (int i = 0; i < numberOfLines; i++)
             {
-                if (mintermsMap[i][j] == '1')
+                for (int j = 0; j < numberOfColumns; j++)
                 {
-                    mintermIndex = convertTo1D(i, j);
-                    
-                    if (!Array.contains(mintermIndex, usedMinterms))
+                    if (mintermsMap[i][j] == '1')
                     {
-                        groupsTable.addLine( getMintermBestGroup(i, j) );
-                        indexesOfMintermsOfTheGroup = groupsTable.getLastLine().mintermsAsDecimal;
-                        
-                        System.arraycopy(
-                                indexesOfMintermsOfTheGroup, 0,
-                                usedMinterms, counterOfUsedMinterms,
-                                indexesOfMintermsOfTheGroup.length);
-                        
-                        counterOfUsedMinterms += indexesOfMintermsOfTheGroup.length;
+                        mintermIndex = convertTo1D(i, j);
+
+                        if (!Array.contains(mintermIndex, usedMinterms))
+                        {
+                            groupsTable.addLine( getMintermBestGroup(i, j) );
+                            indexesOfMintermsOfTheGroup = groupsTable.getLastLine().mintermsAsDecimal;
+
+                            System.arraycopy(
+                                    indexesOfMintermsOfTheGroup, 0,
+                                    usedMinterms, counterOfUsedMinterms,
+                                    indexesOfMintermsOfTheGroup.length);
+
+                            counterOfUsedMinterms += indexesOfMintermsOfTheGroup.length;
+                        }
                     }
                 }
             }
+
+            groupsTable = removeGroupsThatAllMintermsWereUsed(groupsTable);
+            getStatistics();
+            simplify();
         }
-        
-        groupsTable = removeGroupsThatAllMintermsWereUsed(groupsTable);
-        getStatistics();
     }
     
     /**
@@ -959,7 +989,7 @@ public class KarnaughMap
 
     public void printMapWithLogicValues()
     {
-        if (graySequence1 != null && graySequence2 != null && variablesNames != null)
+        if (hasGraySequences() && hasVariablesNames())
         {
             String line = getVariablesNames();
             int firstColumnSize = line.length();
@@ -1039,7 +1069,7 @@ public class KarnaughMap
 
     public void printMapWithMintermsAsDecimal()
     {
-        if (graySequence1 != null && graySequence2 != null && variablesNames != null)
+        if (hasGraySequences() && hasVariablesNames())
         {
             String line = getVariablesNames();
             int firstColumnSize = line.length();
@@ -1070,6 +1100,25 @@ public class KarnaughMap
                 }
 
                 IO.println(line);
+            }
+        }
+    }
+    
+    private void simplify()
+    {
+        if (groupingMode == GroupingMode.HD1)
+        {
+            TableLine tableLine;
+            int numberOfVariables = getNumberOfVariables();
+            
+            for (int i = 0; i < groupsTable.numberOfLines; i++)
+            {
+                tableLine = groupsTable.table[i];
+                
+                for (int nthHDMinterm : tableLine.nthHDMinterms)
+                {
+                    tableLine.mintermAsBinary[numberOfVariables - 1 - nthHDMinterm] = '_';
+                }
             }
         }
     }
@@ -1108,14 +1157,22 @@ public class KarnaughMap
         
         groupStr += " }";
         
-        IO.println(groupStr + " " + TableLine.getBinaryRepresentation(group.mintermAsBinary));
+        if (groupingMode == GroupingMode.HD1)
+        {
+            groupStr += " " + TableLine.getBinaryRepresentation(group.mintermAsBinary);
+        }
+        
+        IO.println(groupStr);
     }
     
     public void printGroups()
     {
-        for (int i = 0; i < groupsTable.numberOfLines; i++)
+        if (groupsTable != null)
         {
-            printGroup(groupsTable.table[i]);
+            for (int i = 0; i < groupsTable.numberOfLines; i++)
+            {
+                printGroup(groupsTable.table[i]);
+            }
         }
     }
     
@@ -1133,20 +1190,28 @@ public class KarnaughMap
 
     public void printStatistics()
     {
-        int groupCount;
-        int numberOfElements;
-
-        for (int i = 0; i < statistics.length; i++)
+        if (statistics != null && Array.getNumberOfElementsOf(usedMinterms) > 0)
         {
-            groupCount = statistics[i];
+            int groupCount;
+            int numberOfElements;
 
-            if (groupCount > 0)
+            for (int i = 0; i < statistics.length; i++)
             {
-                numberOfElements = (int) Math.pow(2, i);
+                groupCount = statistics[i];
 
-                IO.println( groupCount + " grupo" + ( groupCount != 1 ? "s" : "" ) +
-                        " de " + numberOfElements + " elemento" + ( numberOfElements != 1 ? "s" : "" ) );
+                if (groupCount > 0)
+                {
+                    numberOfElements = (int) Math.pow(2, i);
+
+                    IO.println( groupCount + " grupo" + ( groupCount != 1 ? "s" : "" ) +
+                            " de " + numberOfElements + " elemento" + ( numberOfElements != 1 ? "s" : "" ) );
+                }
             }
+        }
+        
+        else
+        {
+            IO.println("Nenhum grupo formado");
         }
     }
 
@@ -1168,19 +1233,16 @@ public class KarnaughMap
     {
         String expression = "";
         
-        if (variablesNames != null)
+        for (int i = 0; i < variablesNames.length; i++)
         {
-            for (int i = 0; i < variablesNames.length; i++)
+            if (mintermAsBinary[variablesNames.length - 1 - i] == '0')
             {
-                if (mintermAsBinary[variablesNames.length - 1 - i] == '0')
-                {
-                    expression += variablesNames[i] + "'.";
-                }
+                expression += variablesNames[i] + "'.";
+            }
 
-                else if (mintermAsBinary[variablesNames.length - 1 - i] == '1')
-                {
-                    expression += variablesNames[i] + ".";
-                }
+            else if (mintermAsBinary[variablesNames.length - 1 - i] == '1')
+            {
+                expression += variablesNames[i] + ".";
             }
         }
         
@@ -1207,13 +1269,17 @@ public class KarnaughMap
 
     public void printExpression()
     {
-        String expression = getExpression(groupsTable.table[0].mintermAsBinary);
-
-        for (int i = 1; i < groupsTable.numberOfLines; i++)
+        if (groupsTable != null && groupsTable.numberOfLines > 0 &&
+                groupingMode == GroupingMode.HD1)
         {
-            expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
-        }
+            String expression = getExpression(groupsTable.table[0].mintermAsBinary);
 
-        IO.println(expression);
+            for (int i = 1; i < groupsTable.numberOfLines; i++)
+            {
+                expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
+            }
+
+            IO.println(expression);
+        }
     }
 }
