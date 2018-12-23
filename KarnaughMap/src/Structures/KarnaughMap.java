@@ -1047,7 +1047,7 @@ public class KarnaughMap
 
         for (int i = 1; i < groupsTable.numberOfLines; i++)
         {
-            expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);;
+            expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
         }
 
         IO.println(expression);
