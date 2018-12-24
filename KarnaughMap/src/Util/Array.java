@@ -9,6 +9,55 @@ import java.util.Arrays;
 public class Array
 {
     /**
+     * Preenche a matriz {@code matrix} com os valores {@code value}.
+     * 
+     * @param matrix matriz a ser preenchida
+     * @param value valor a ser colocado
+     */
+    
+    public static void fill(int[][] matrix, int value)
+    {
+        if (matrix != null && matrix.length > 0 && matrix[0].length > 0)
+        {
+            for (int[] line : matrix)
+            {
+                Arrays.fill(line, value);
+            }
+        }
+    }
+    
+    /**
+     * Usando a convensao de preencher as matrizes de inteiros com -1 antes de
+     * usa'-las, esse metodo serve para remover todas as linhas e colunas nao
+     * utilizadas na matriz {@code matrix}.
+     * 
+     * @param matrix matriz a ser analisada
+     * 
+     * @return Nova matriz com todas as linhas e colunas nao utilizadas na
+     * matriz {@code matrix} removidas.
+     */
+    
+    public static int[][] fit(int[][] matrix)
+    {
+        int[][] newMatrix = matrix;
+        
+        if (matrix != null && matrix.length > 0 && matrix[0].length > 0)
+        {
+            int numberOfColumns = getNumberOfElementsOf(matrix[0]);
+            int numberOfLines = getNumberOfLinesOf(matrix);
+            
+            newMatrix = new int[numberOfLines][numberOfColumns];
+            
+            for (int i = 0; i < numberOfLines; i++)
+            {
+                System.arraycopy(matrix[i], 0, newMatrix[i], 0, numberOfColumns);
+            }
+        }
+        
+        return newMatrix;
+    }
+    
+    /**
      * Gera uma matriz que e' resultado do corte, a partir da linha 0, da matriz
      * {@code matrix}, incluindo {@code numberOfLines} linhas para baixo.
      * 
@@ -104,6 +153,32 @@ public class Array
         {
             addValueIfItDoesntExistInArray(array, values[i], valuesToIgnore);
         }
+    }
+    
+    /**
+     * Usando a convensao de preencher as matrizes de inteiros com -1 antes de
+     * usa'-las, esse metodo serve para saber quantas linhas da matriz ja' foram
+     * usadas a partir da linha 0 e em sequencia.
+     * 
+     * @param matrix matriz a ser percorrida
+     * 
+     * @return Quantas linhas da matriz ja' foram usadas a partir da linha 0 e
+     * em sequencia.
+     */
+    
+    public static int getNumberOfLinesOf(int[][] matrix)
+    {
+        int numberOfLines = 0;
+        
+        if (matrix != null)
+        {
+            for (int i = 0; i < matrix.length && matrix[i][0] != -1; i++)
+            {
+                numberOfLines++;
+            }
+        }
+        
+        return numberOfLines;
     }
     
     /**

@@ -1,6 +1,7 @@
 package Structures;
 
 import Util.*;
+import Structures.Operation.Operations;
 import java.util.Arrays;
 
 /**
@@ -18,6 +19,7 @@ public class KarnaughMap
     MintermTable groupsTable;
     int[] usedMinterms;
     int[] statistics;
+    Operation headOp;
     
     public enum GroupingMode
     {
@@ -36,6 +38,7 @@ public class KarnaughMap
                 this.variablesNames = variablesNames;
             }
             
+            headOp = new Operation(Operations.OR, 1, '1', new char[0], variablesNames, null);
             statistics = new int[numberOfVariables + 1];
             groupsTable = new MintermTable( (int) Math.pow(2, numberOfVariables) );
             
@@ -107,6 +110,13 @@ public class KarnaughMap
     private char[] getCorrespondingGrayNumber(int mintermLine, int mintermColumn)
     {
         return Array.concatArrays(graySequence2[mintermColumn], graySequence1[mintermLine]);
+    }
+    
+    private char[] getCorrespondingGrayNumber(int mintermIndex)
+    {
+        int[] mintermCoords = convertTo2D(mintermIndex);
+        
+        return getCorrespondingGrayNumber(mintermCoords[0], mintermCoords[1]);
     }
     
     private boolean hasGraySequences()
@@ -873,6 +883,7 @@ public class KarnaughMap
             groupsTable = removeGroupsThatAllMintermsWereUsed(groupsTable);
             getStatistics();
             simplify();
+            IO.println("" + headOp);
         }
     }
     
@@ -1104,22 +1115,205 @@ public class KarnaughMap
         }
     }
     
-    private void simplify()
+    /**
+     * Cria uma {@code Operation} do tipo AND em que os operandos sao os bits
+     * do arranjo {@code mintermAsBinary} da direita para esquerda.
+     * 
+     * @param mintermAsBinary bits a se tornarem operandos
+     * @param connectedOperation operacao pai da AND
+     * 
+     * @return Uma {@code Operation} do tipo AND em que os operandos sao os bits
+     * do arranjo {@code mintermAsBinary}.
+     */
+    
+    private Operation createAndGate(char[] mintermAsBinary, Operation connectedOperation)
     {
-        if (groupingMode == GroupingMode.HD1)
+        int numberOfVariables = mintermAsBinary.length;
+        Operation andGate = connectedOperation.addOperand(Operations.AND, '1');
+        
+        for (int j = numberOfVariables - 1; j > -1; j--)
         {
-            TableLine tableLine;
-            int numberOfVariables = getNumberOfVariables();
+            andGate.addOperand(Operations.NONE, j, mintermAsBinary[j]);
+        }
+        
+        return andGate;
+    }
+    
+    /**
+     * Cria a operacao do grupo {@code mintermGroup} que e' uma porta OR com
+     * varias portas ANDs como seus operandos, sendo cada AND um mintermo do
+     * grupo.
+     * 
+     * @param mintermGroup grupo de mintermos a ser analisado
+     * @param connectedOperation operacao pai a que a operacao do grupo deve ser
+     * conectada
+     * 
+     * @return operacao do grupo {@code mintermGroup} que e' uma porta OR com
+     * varias portas ANDs como seus operandos, sendo cada AND um mintermo do
+     * grupo.
+     */
+    
+    private Operation getGroupOperation(TableLine mintermGroup, Operation connectedOperation)
+    {
+        int[] mintermsAsDecimal = mintermGroup.mintermsAsDecimal;
+        Operation groupOp = connectedOperation.addOperand(Operations.OR, '1');
+        
+        for (int i = 0; i < mintermsAsDecimal.length; i++)
+        {
+            createAndGate
+            (
+                getCorrespondingGrayNumber(mintermsAsDecimal[i]),
+                groupOp
+            );
+        }
+        
+        return groupOp;
+    }
+    
+    /**
+     * Percorre os operandos das duas operacoes analisando aonde existe
+     * distancia hamming 1. Caso as duas operacoes facam distancia hamming de 1,
+     * o metodo gera uma matriz 2x1, caso contrario, gera uma matriz 2x2. Em
+     * ambos os casos, na primeira linha da matriz encontra-se os indices de
+     * quais operacoes tem o bit 1. Na segunda linha, encontra-se os indices dos
+     * bits que deram a distancia hamming.
+     * 
+     * <p>Ex: getIndexesOfHDBits( {'0', '0', '1'}, {'0', '1', '0'} ) gera:</p>
+     * <p>{ { 1, 0 }, { 1, 2 } }</p>
+     * <p>Olhando para a segunda linha da matriz: { 1, 2 }, isso indica que as
+     * distancias hammings acontecem nos indices 1 e 2 dos operandos das
+     * operacoes. Agora, olhando para a primeira linha da matriz: { 1, 0 }, o 1
+     * (um) indica que entre a primeira distancia hamming que aconteceu, a
+     * segunda operacao e' a que esta' com o bit 1.</p>
+     * 
+     * @param op1 primeira operacao da analise
+     * @param op2 segunda operacao da analise
+     * 
+     * @return Indices das operacoes que tem o bit 1 na distancia hamming e os
+     * indices dos bits da distancia hamming.
+     */
+    
+    private int[][] getIndexesOfHDBits(Operation op1, Operation op2)
+    {
+        int[][] indexesOfHDBits = new int[2][2];
+        Array.fill(indexesOfHDBits, -1);
+        int counterOfIndexesOfHDBits = 0;
+        int numberOfOperands = op1.getNumberOfOperands();
+        int indexOfTheOperationWithBitAs1;
+        char value1, value2;
+        
+        for (int i = 0; i < numberOfOperands; i++)
+        {
+            value1 = op1.getOperand(i).auxiliarValue;
+            value2 = op2.getOperand(i).auxiliarValue;
             
-            for (int i = 0; i < groupsTable.numberOfLines; i++)
+            if (value1 != value2)
             {
-                tableLine = groupsTable.table[i];
-                
-                for (int nthHDMinterm : tableLine.nthHDMinterms)
+                if (value1 == '1')
                 {
-                    tableLine.mintermAsBinary[numberOfVariables - 1 - nthHDMinterm] = '_';
+                    indexOfTheOperationWithBitAs1 = 0;
+                }
+                
+                else
+                {
+                    indexOfTheOperationWithBitAs1 = 1;
+                }
+                
+                indexesOfHDBits[0][counterOfIndexesOfHDBits] = indexOfTheOperationWithBitAs1;
+                indexesOfHDBits[1][counterOfIndexesOfHDBits++] = i;
+            }
+        }
+        
+        return Array.fit(indexesOfHDBits);
+    }
+    
+    private void simplifyOperandsByHD1(Operation groupOperation, int indexOfOperand1, int indexOfOperand2, int[][] indexesOfHD1Bits)
+    {
+        groupOperation.removeOperand(indexOfOperand2);
+        groupOperation.getOperand(indexOfOperand1).removeOperand(indexesOfHD1Bits[1][0]);
+    }
+    
+    private void simplifyOperandsByHD2(Operation groupOperation, int indexOfOperand1, int indexOfOperand2, int[][] indexesOfHD2Bits)
+    {
+        Operations op;
+        char auxiliarValue;
+        Operation connectedOperation = groupOperation.getOperand(indexOfOperand2);
+        
+        if (indexesOfHD2Bits[0][0] == indexesOfHD2Bits[0][1])
+        {
+            op = Operations.XNOR;
+            auxiliarValue = '0';
+        }
+        
+        else
+        {
+            op = Operations.XOR;
+            auxiliarValue = '1';
+        }
+        
+        Operation newOp = connectedOperation.addOperand(op, auxiliarValue);
+        
+        newOp.addOperand
+        (groupOperation.getOperand(indexOfOperand1 + indexesOfHD2Bits[0][0])
+            .getOperand(indexesOfHD2Bits[1][0]));
+        
+        newOp.addOperand
+        (groupOperation.getOperand(indexOfOperand1 + indexesOfHD2Bits[0][1])
+            .getOperand(indexesOfHD2Bits[1][1]));
+        
+        groupOperation.removeOperand(indexOfOperand1);
+        connectedOperation.removeOperand(indexesOfHD2Bits[1][0]);
+        connectedOperation.removeOperand(indexesOfHD2Bits[1][1]);
+    }
+    
+    private Operation simplifyGroupOperation(Operation groupOperation)
+    {
+        int numberOfOperands = groupOperation.getNumberOfOperands();
+        int[][] indexesOfHDBits;
+        
+        while (numberOfOperands > 1)
+        {
+            for (int i = 0; i < numberOfOperands; i += 2)
+            {
+                indexesOfHDBits = 
+                getIndexesOfHDBits
+                (
+                    groupOperation.getOperand(i),
+                    groupOperation.getOperand(i + 1)
+                );
+                
+                switch (indexesOfHDBits[0].length)
+                {
+                    case 1:
+                        simplifyOperandsByHD1(groupOperation, i, i + 1, indexesOfHDBits);
+                        break;
+                        
+                    case 2:
+                        simplifyOperandsByHD2(groupOperation, i, i + 1, indexesOfHDBits);
+                        break;
+                        
+                    default:
+                        break;
                 }
             }
+            
+            numberOfOperands = groupOperation.getNumberOfOperands();
+        }
+        
+        return groupOperation;
+    }
+    
+    private void simplify()
+    {
+        for (int i = 0; i < groupsTable.numberOfLines; i++)
+        {
+            headOp.addOperand
+            (
+                simplifyGroupOperation
+                (
+                    getGroupOperation(groupsTable.table[i], headOp)
+                )
+            );
         }
     }
     
