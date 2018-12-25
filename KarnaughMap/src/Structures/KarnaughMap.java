@@ -1129,7 +1129,7 @@ public class KarnaughMap
     private Operation createAndGate(char[] mintermAsBinary, Operation connectedOperation)
     {
         int numberOfVariables = mintermAsBinary.length;
-        Operation andGate = connectedOperation.addOperand(Operations.AND, '1');
+        Operation andGate = connectedOperation.addOperand(Operations.AND, mintermAsBinary);
         
         for (int j = numberOfVariables - 1; j > -1; j--)
         {
@@ -1156,7 +1156,12 @@ public class KarnaughMap
     private Operation getGroupOperation(TableLine mintermGroup, Operation connectedOperation)
     {
         int[] mintermsAsDecimal = mintermGroup.mintermsAsDecimal;
-        Operation groupOp = connectedOperation.addOperand(Operations.OR, '1');
+        Operation groupOp =
+            connectedOperation.addOperand
+            (
+                Operations.OR,
+                getCorrespondingGrayNumber(mintermsAsDecimal[0])
+            );
         
         for (int i = 0; i < mintermsAsDecimal.length; i++)
         {
@@ -1229,8 +1234,8 @@ public class KarnaughMap
     
     private void simplifyOperandsByHD1(Operation groupOperation, int indexOfOperand1, int indexOfOperand2, int[][] indexesOfHD1Bits)
     {
-        groupOperation.removeOperand(indexOfOperand2);
         groupOperation.getOperand(indexOfOperand1).removeOperand(indexesOfHD1Bits[1][0]);
+        groupOperation.removeOperand(indexOfOperand2);
     }
     
     private void simplifyOperandsByHD2(Operation groupOperation, int indexOfOperand1, int indexOfOperand2, int[][] indexesOfHD2Bits)
@@ -1266,7 +1271,7 @@ public class KarnaughMap
         connectedOperation.removeOperand(indexesOfHD2Bits[1][1]);
     }
     
-    private Operation simplifyGroupOperation(Operation groupOperation)
+    private void simplifyGroupOperation(Operation groupOperation)
     {
         int numberOfOperands = groupOperation.getNumberOfOperands();
         int[][] indexesOfHDBits;
@@ -1299,21 +1304,21 @@ public class KarnaughMap
             
             numberOfOperands = groupOperation.getNumberOfOperands();
         }
-        
-        return groupOperation;
     }
     
     private void simplify()
     {
+        Operation groupOperation;
+        
         for (int i = 0; i < groupsTable.numberOfLines; i++)
         {
-            headOp.addOperand
-            (
-                simplifyGroupOperation
-                (
-                    getGroupOperation(groupsTable.table[i], headOp)
-                )
-            );
+            groupOperation = getGroupOperation(groupsTable.table[i], headOp);
+            
+            headOp.addOperandWithoutMergeIt(groupOperation);
+            
+            simplifyGroupOperation(groupOperation);
+            
+            headOp.mergeTreeIfIsPossible();
         }
     }
     

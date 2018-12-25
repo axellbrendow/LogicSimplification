@@ -1,6 +1,7 @@
 package Structures;
 
 import java.util.ArrayList;
+import Util.IO;
 
 /**
  * @author Axell Brendow (https://github.com/axell-brendow)
@@ -74,17 +75,90 @@ public class Operation
         return operands.get(index);
     }
     
+    private void merge(Operation op)
+    {
+        // adiciona os operandos de op na lista de operandos desse objeto
+        op.operands.forEach( (operand) -> addOperand(operand) );
+    }
+    
+    private boolean isPossibleToMerge(Operation op)
+    {
+        return op.name == name;
+    }
+    
+    public void mergeChildIfItExists(Operation child)
+    {
+        int childIndex = operands.indexOf(child);
+        
+        if (childIndex != -1)
+        {
+            removeOperandWithoutMergeItsOperation(childIndex);
+            merge(child);
+        }
+    }
+    
+    public void mergeChildsIfIsPossible()
+    {
+        Operation child;
+        
+        for (int i = 0; i < getNumberOfOperands(); i++)
+        {
+            child = operands.get(i);
+            
+            if (isPossibleToMerge(child))
+            {
+                // tomar cuidado com as linhas abaixo pois a quantidade de
+                // operandos vai mudando ao longo das iteracoes do for
+                removeOperandWithoutMergeItsOperation(i);
+                merge(child);
+            }
+        }
+    }
+    
+    private void mergeTreeIfIsPossible(Operation op)
+    {
+        for (int i = 0; i < op.getNumberOfOperands(); i++)
+        {
+            mergeTreeIfIsPossible(op.getOperand(i));
+        }
+        
+        if (op.hasOperands())
+        {
+            mergeChildsIfIsPossible();
+        }
+    }
+    
+    public void mergeTreeIfIsPossible()
+    {
+        mergeTreeIfIsPossible(this);
+    }
+    
+    public Operation addOperandWithoutMergeIt(int index, Operation operand)
+    {
+        operands.add(index, operand);
+        
+        return operand;
+    }
+    
+    public Operation addOperandWithoutMergeIt(Operation operand)
+    {
+        return addOperandWithoutMergeIt(getNumberOfOperands(), operand);
+    }
+    
     public Operation addOperand(int index, Operation operand)
     {
-        if (operand.name == name)
+        // checa se a operacao que se deseja adicionar e' do mesmo tipo da
+        // operacao desse objeto
+        /*if (isPossibleToMerge(operand))
         {
-            operand.operands.forEach( (op) -> addOperand(op) );
+            // se for, adiciona os operandos dela na operacao desse objeto
+            merge(operand);
         }
         
         else
-        {
-            operands.add(index, operand);
-        }
+        {*/
+            addOperandWithoutMergeIt(index, operand);
+        //}
         
         return operand;
     }
@@ -94,7 +168,7 @@ public class Operation
         return addOperand(getNumberOfOperands(), operand);
     }
     
-    public Operation addOperand(Operations op, int value, char auxiliarValue)
+    public Operation addOperand(Operations op, int value, char auxiliarValue, char[] mintermAsBinary)
     {
         return
         addOperand
@@ -106,27 +180,50 @@ public class Operation
         );
     }
     
+    public Operation addOperand(Operations op, int value, char auxiliarValue)
+    {
+        return addOperand(op, value, auxiliarValue, mintermAsBinary);
+    }
+    
+    public Operation addOperand(Operations op, char auxiliarValue, char[] mintermAsBinary)
+    {
+        return addOperand(op, getNumberOfOperands(), auxiliarValue, mintermAsBinary);
+    }
+    
     public Operation addOperand(Operations op, char auxiliarValue)
     {
-        return addOperand(op, getNumberOfOperands(), auxiliarValue);
+        return addOperand(op, auxiliarValue, mintermAsBinary);
+    }
+    
+    public Operation addOperand(Operations op, char[] mintermAsBinary)
+    {
+        return addOperand(op, '?', mintermAsBinary);
+    }
+    
+    public void removeOperandWithoutMergeItsOperation(int index)
+    {
+        operands.remove(index);
     }
     
     public void removeOperand(int index)
     {
         if (hasOperands())
         {
-            operands.remove(index);
+            removeOperandWithoutMergeItsOperation(index);/*
 
             if (getNumberOfOperands() == 1 && connectedOperation != null &&
                 connectedOperation.hasOperands())
             {
                 int indexOfMeInMyFather = connectedOperation.
                         operands.indexOf(this);
-
-                connectedOperation.removeOperand(indexOfMeInMyFather);
-
-                connectedOperation.addOperand(indexOfMeInMyFather, getOperand(0));
-            }
+                
+                if (indexOfMeInMyFather != -1)
+                {
+                    connectedOperation.removeOperand(indexOfMeInMyFather);
+                    
+                    connectedOperation.addOperand(indexOfMeInMyFather, getOperand(0));
+                }
+            }*/
         }
     }
     
@@ -144,47 +241,52 @@ public class Operation
     
     public String toString(Operation op, String str)
     {
-        if (op.name == Operations.NONE)
+        if (hasOperands())
         {
-            str += op.getCorrespondingVariable();
-        }
-        
-        else if
-        (
-         op.name == Operations.OR && op.connectedOperation.name == Operations.AND ||
-                
-         ( op.name == Operations.XOR || op.name == Operations.XNOR ) &&
-         !(
-               op.connectedOperation.name == Operations.XOR ||
-               op.connectedOperation.name == Operations.XNOR
-          )
-        )
-        {
-            str += toStringEnclosedWithParenthesis(op);
-        }
-        
-        else
-        {
-            int i;
-            int numberOfOperands = op.getNumberOfOperands();
-            
-            for (i = 0; i < numberOfOperands - 1; i++)
+            if (op.name == Operations.NONE)
             {
-                str = toString(op.getOperand(i), str);
-                
-                switch (op.name)
-                {
-                    case AND:
-                        str += "" + op.name;
-                        break;
-                        
-                    default:
-                        str += " " + op.name + " ";
-                        break;
-                }
+                str += op.getCorrespondingVariable();
             }
-            
-            str = toString(op.getOperand(i), str);
+
+            else if
+            (
+             op.connectedOperation != null &&
+             ( op.name == Operations.OR && op.connectedOperation.name == Operations.AND ||
+
+             ( op.name == Operations.XOR || op.name == Operations.XNOR ) &&
+             !(
+                   op.connectedOperation.name == Operations.XOR ||
+                   op.connectedOperation.name == Operations.XNOR
+              )
+             )
+            )
+            {
+                str += toStringEnclosedWithParenthesis(op);
+            }
+
+            else
+            {
+                int i;
+                int numberOfOperands = op.getNumberOfOperands();
+
+                for (i = 0; i < numberOfOperands - 1; i++)
+                {
+                    str = toString(op.getOperand(i), str);
+
+                    switch (op.name)
+                    {
+                        case AND:
+                            str += "" + op.name;
+                            break;
+
+                        default:
+                            str += " " + op.name + " ";
+                            break;
+                    }
+                }
+
+                str = toString(op.getOperand(i), str);
+            }
         }
         
         return str;
@@ -199,5 +301,10 @@ public class Operation
     public String toString()
     {
         return toString(this, "");
+    }
+    
+    public void printOperation()
+    {
+        IO.println("" + this);
     }
 }
