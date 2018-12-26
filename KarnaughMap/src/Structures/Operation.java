@@ -2,6 +2,7 @@ package Structures;
 
 import java.util.ArrayList;
 import Util.IO;
+import java.util.function.*;
 
 /**
  * @author Axell Brendow (https://github.com/axell-brendow)
@@ -16,6 +17,7 @@ public class Operation
     String[] variablesNames;
     Operation connectedOperation;
     ArrayList<Operation> operands;
+    String textRepresentation;
     
     public enum Operations
     {
@@ -60,6 +62,11 @@ public class Operation
         return name.toString();
     }
     
+    public boolean hasAllVariablesNames()
+    {
+        return (variablesNames != null && variablesNames.length == mintermAsBinary.length);
+    }
+    
     public int getNumberOfOperands()
     {
         return operands.size();
@@ -75,90 +82,147 @@ public class Operation
         return operands.get(index);
     }
     
-    private void merge(Operation op)
+    public int getIndexOfMeInMyFather()
     {
-        // adiciona os operandos de op na lista de operandos desse objeto
-        op.operands.forEach( (operand) -> addOperand(operand) );
-    }
-    
-    private boolean isPossibleToMerge(Operation op)
-    {
-        return op.name == name;
-    }
-    
-    public void mergeChildIfItExists(Operation child)
-    {
-        int childIndex = operands.indexOf(child);
+        int indexOfMeInMyFather = -1;
         
-        if (childIndex != -1)
+        if (connectedOperation != null)
         {
-            removeOperandWithoutMergeItsOperation(childIndex);
-            merge(child);
+            indexOfMeInMyFather = connectedOperation.operands.indexOf(this);
         }
+        
+        return indexOfMeInMyFather;
     }
     
-    public void mergeChildsIfIsPossible()
+    public void runTreeExecuting(
+            BiFunction<Operation, Integer, Boolean> toExecuteBefore,
+            BiConsumer<Operation, Integer> toExecuteBetween,
+            BiConsumer<Operation, Integer> toExecuteAfter,
+            Operation operation,
+            int operationIndex
+    )
     {
-        Operation child;
+        boolean stopRecursion =
+                operation == null ||
+                toExecuteBefore.apply(operation, operationIndex);
         
-        for (int i = 0; i < getNumberOfOperands(); i++)
+        if (!stopRecursion)
         {
-            child = operands.get(i);
-            
-            if (isPossibleToMerge(child))
+            int numberOfOperands = operation.getNumberOfOperands();
+
+            if (numberOfOperands > 0)
             {
-                // tomar cuidado com as linhas abaixo pois a quantidade de
-                // operandos vai mudando ao longo das iteracoes do for
-                removeOperandWithoutMergeItsOperation(i);
-                merge(child);
+                if (numberOfOperands > 1)
+                {
+                    int i;
+
+                    for (i = 0; i < operation.getNumberOfOperands() - 1; i++)
+                    {
+                        runTreeExecuting(
+                            toExecuteBefore,
+                            toExecuteBetween,
+                            toExecuteAfter,
+                            operation.getOperand(i), i
+                        );
+                        toExecuteBetween.accept(operation, operationIndex);
+                    }
+
+                    runTreeExecuting(
+                        toExecuteBefore,
+                        toExecuteBetween,
+                        toExecuteAfter,
+                        operation.getOperand(i), i
+                    );
+                }
+
+                else
+                {
+                    runTreeExecuting(
+                        toExecuteBefore,
+                        toExecuteBetween,
+                        toExecuteAfter,
+                        operation.getOperand(0), 0
+                    );
+
+                    toExecuteBetween.accept(operation, operationIndex);
+                }
             }
+
+            else
+            {
+                toExecuteBetween.accept(operation, operationIndex);
+            }
+
+            toExecuteAfter.accept(operation, operationIndex);
         }
     }
     
-    private void mergeTreeIfIsPossible(Operation op)
+    public void runTreeExecuting(
+            BiFunction<Operation, Integer, Boolean> toExecuteBefore,
+            BiConsumer<Operation, Integer> toExecuteBetween,
+            BiConsumer<Operation, Integer> toExecuteAfter,
+            Function<Operation, Boolean> toExecuteInRootBefore,
+            Consumer<Operation> toExecuteInRootBetween,
+            Consumer<Operation> toExecuteInRootAfter
+    )
     {
-        for (int i = 0; i < op.getNumberOfOperands(); i++)
-        {
-            mergeTreeIfIsPossible(op.getOperand(i));
-        }
+        boolean stopRecursion = toExecuteInRootBefore.apply(this);
         
-        if (op.hasOperands())
+        if (!stopRecursion)
         {
-            mergeChildsIfIsPossible();
+            int numberOfOperands = getNumberOfOperands();
+
+            if (numberOfOperands > 0)
+            {
+                if (numberOfOperands > 1)
+                {
+                    int i;
+
+                    for (i = 0; i < getNumberOfOperands() - 1; i++)
+                    {
+                        runTreeExecuting(
+                            toExecuteBefore,
+                            toExecuteBetween,
+                            toExecuteAfter,
+                            getOperand(i), i
+                        );
+                        toExecuteInRootBetween.accept(this);
+                    }
+
+                    runTreeExecuting(
+                        toExecuteBefore,
+                        toExecuteBetween,
+                        toExecuteAfter,
+                        getOperand(i), i
+                    );
+                }
+
+                else
+                {
+                    runTreeExecuting(
+                        toExecuteBefore,
+                        toExecuteBetween,
+                        toExecuteAfter,
+                        getOperand(0), 0
+                    );
+
+                    toExecuteInRootBetween.accept(this);
+                }
+            }
+
+            else
+            {
+                toExecuteInRootBetween.accept(this);
+            }
+
+            toExecuteInRootAfter.accept(this);
         }
-    }
-    
-    public void mergeTreeIfIsPossible()
-    {
-        mergeTreeIfIsPossible(this);
-    }
-    
-    public Operation addOperandWithoutMergeIt(int index, Operation operand)
-    {
-        operands.add(index, operand);
-        
-        return operand;
-    }
-    
-    public Operation addOperandWithoutMergeIt(Operation operand)
-    {
-        return addOperandWithoutMergeIt(getNumberOfOperands(), operand);
     }
     
     public Operation addOperand(int index, Operation operand)
     {
-        // checa se a operacao que se deseja adicionar e' do mesmo tipo da
-        // operacao desse objeto
-        /*if (isPossibleToMerge(operand))
-        {
-            // se for, adiciona os operandos dela na operacao desse objeto
-            merge(operand);
-        }
-        
-        else
-        {*/
-            addOperandWithoutMergeIt(index, operand);
-        //}
+        operands.add(index, operand);
+        operand.connectedOperation = this;
         
         return operand;
     }
@@ -200,31 +264,161 @@ public class Operation
         return addOperand(op, '?', mintermAsBinary);
     }
     
-    public void removeOperandWithoutMergeItsOperation(int index)
+    public void disconnect(int operandIndex)
     {
+        Operation operand = getOperand(operandIndex);
+        
+        if (operand != null)
+        {
+            // desconecta o ponteiro de subida do operando
+            operand.connectedOperation = null;
+        }
+    }
+    
+    public void removeOperandFromList(int index)
+    {
+        disconnect(index);
         operands.remove(index);
     }
     
     public void removeOperand(int index)
     {
-        if (hasOperands())
+        disconnect(index);
+        
+        // remove o operando
+        operands.set(index, null);
+    }
+    
+    public void removeOperand(Operation operand)
+    {
+        int index = operands.indexOf(operand);
+        
+        if (index != -1)
         {
-            removeOperandWithoutMergeItsOperation(index);/*
-
-            if (getNumberOfOperands() == 1 && connectedOperation != null &&
-                connectedOperation.hasOperands())
-            {
-                int indexOfMeInMyFather = connectedOperation.
-                        operands.indexOf(this);
-                
-                if (indexOfMeInMyFather != -1)
-                {
-                    connectedOperation.removeOperand(indexOfMeInMyFather);
-                    
-                    connectedOperation.addOperand(indexOfMeInMyFather, getOperand(0));
-                }
-            }*/
+            removeOperand(index);
         }
+    }
+    
+    public void removeOperationsWithOnlyOneOperand()
+    {
+        runTreeExecuting
+        (
+            (operation, operationIndex) -> { return false; },
+            (operation, operationIndex) -> {  },
+            (operation, operationIndex) ->
+            {
+                if (operation.getNumberOfOperands() == 1)
+                {
+                    operation.connectedOperation.mergeChild(operationIndex);
+                }
+            },
+            
+            (root) -> { return false; },
+            (root) -> {  },
+            (root) -> {  }
+        );
+        
+        cleanTree();
+    }
+    
+    public void cleanOperands()
+    {
+        for (int i = 0; i < getNumberOfOperands(); i++)
+        {
+            if (getOperand(i) == null)
+            {
+                removeOperandFromList(i);
+                i = -1;
+            }
+        }
+    }
+    
+    public void cleanTree()
+    {
+        runTreeExecuting
+        (
+            (operation, operationIndex) ->
+            {
+                operation.cleanOperands();
+                return false;
+            },
+            (operation, operationIndex) -> {  },
+            (operation, operationIndex) -> {  },
+            
+            (root) ->
+            {
+                root.cleanOperands();
+                return false;
+            },
+            (root) -> {  },
+            (root) -> {  }
+        );
+    }
+    
+    private void merge(Operation op)
+    {
+        // adiciona os operandos de op na lista de operandos desse objeto
+        op.operands.forEach(
+            (operand) ->
+            {
+                addOperand(operand);
+            }
+        );
+    }
+    
+    private boolean isPossibleToMerge(Operation op)
+    {
+        return op.name == name;
+    }
+    
+    private void mergeChild(int childIndex)
+    {
+        Operation child = getOperand(childIndex);
+        
+        removeOperand(childIndex);
+        merge(child);
+    }
+    
+    public void mergeChildIfIsPossible(int childIndex)
+    {
+        Operation child = getOperand(childIndex);
+
+        if (isPossibleToMerge(child))
+        {
+            mergeChild(childIndex);
+        }
+    }
+    
+    public void mergeChildsIfIsPossible()
+    {
+        for (int i = 0; i < getNumberOfOperands(); i++)
+        {
+            mergeChildIfIsPossible(i);
+        }
+    }
+    
+    public void mergeTreeIfIsPossible()
+    {
+        runTreeExecuting
+        (
+            (operation, operationIndex) -> { return false; },
+            (operation, operationIndex) -> {  },
+            (operation, operationIndex) ->
+            {
+                Operation father = operation.connectedOperation;
+
+                if (operationIndex < father.getNumberOfOperands())
+                {
+                    father.mergeChildIfIsPossible(operationIndex);
+                }
+            },
+            
+            (root) -> { return false; },
+            (root) -> {  },
+            (root) -> {  }
+        );
+        
+        cleanTree();
     }
     
     public String getCorrespondingVariable()
@@ -239,68 +433,97 @@ public class Operation
         return variable;
     }
     
-    public String toString(Operation op, String str)
+    public boolean isXOR_or_XNOR()
     {
-        if (hasOperands())
-        {
-            if (op.name == Operations.NONE)
-            {
-                str += op.getCorrespondingVariable();
-            }
-
-            else if
-            (
-             op.connectedOperation != null &&
-             ( op.name == Operations.OR && op.connectedOperation.name == Operations.AND ||
-
-             ( op.name == Operations.XOR || op.name == Operations.XNOR ) &&
-             !(
-                   op.connectedOperation.name == Operations.XOR ||
-                   op.connectedOperation.name == Operations.XNOR
-              )
-             )
-            )
-            {
-                str += toStringEnclosedWithParenthesis(op);
-            }
-
-            else
-            {
-                int i;
-                int numberOfOperands = op.getNumberOfOperands();
-
-                for (i = 0; i < numberOfOperands - 1; i++)
-                {
-                    str = toString(op.getOperand(i), str);
-
-                    switch (op.name)
-                    {
-                        case AND:
-                            str += "" + op.name;
-                            break;
-
-                        default:
-                            str += " " + op.name + " ";
-                            break;
-                    }
-                }
-
-                str = toString(op.getOperand(i), str);
-            }
-        }
-        
-        return str;
+        return ( name == Operations.XOR || name == Operations.XNOR );
     }
     
-    private String toStringEnclosedWithParenthesis(Operation op)
+    public boolean hasMorePriorityThan(Operation operation)
     {
-        return "(" + toString(op, "") + ")";
+        return operation != null &&
+        ( name == Operations.OR && operation.name == Operations.AND ||
+          ( isXOR_or_XNOR() && !operation.isXOR_or_XNOR() )
+        );
+    }
+    
+    public boolean needsParenthesis()
+    {
+        return connectedOperation != null &&
+                connectedOperation.getNumberOfOperands() > 1 &&
+                hasMorePriorityThan(connectedOperation);
+    }
+    
+    private boolean toStringBefore(Operation operation)
+    {
+        boolean stopRecursion = false;
+
+        if (operation.name == Operations.NONE)
+        {
+            textRepresentation += operation.getCorrespondingVariable();
+            stopRecursion = true;
+        }
+
+        else
+        {
+            if (operation.needsParenthesis())
+            {
+                textRepresentation += "(";
+            }
+        }
+
+        return stopRecursion;
+    }
+    
+    private void toStringBetween(Operation operation)
+    {
+        if (operation.getNumberOfOperands() > 1)
+        {
+            switch (operation.name)
+            {
+                case AND:
+                    textRepresentation += "" + operation.name;
+                    break;
+
+                default:
+                    textRepresentation += " " + operation.name + " ";
+                    break;
+            }
+        }
+    }
+    
+    private void toStringAfter(Operation operation)
+    {
+        if (operation.needsParenthesis())
+        {
+            textRepresentation += ")";
+        }
     }
     
     @Override
     public String toString()
     {
-        return toString(this, "");
+        textRepresentation = "";
+        
+        if (hasAllVariablesNames())
+        {
+            runTreeExecuting
+            (
+                (operation, operationIndex) -> { return toStringBefore(operation); },
+                (operation, operationIndex) -> { toStringBetween(operation); },
+                (operation, operationIndex) -> { toStringAfter(operation); },
+
+                (root) -> { return toStringBefore(this); },
+                (root) -> { toStringBetween(this); },
+                (root) -> { toStringAfter(this); }
+            );
+            
+            if (textRepresentation.isEmpty())
+            {
+                textRepresentation = "1";
+            }
+        }
+        
+        return textRepresentation;
     }
     
     public void printOperation()

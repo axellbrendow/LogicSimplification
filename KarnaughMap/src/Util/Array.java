@@ -212,7 +212,12 @@ public class Array
     
     public static int getNumberOfElementsOf(int[] array)
     {
-        int numberOfElements = indexOf(-1, array);
+        int numberOfElements = 0;
+        
+        if (array != null && array.length > 0)
+        {
+            numberOfElements = indexOf(-1, array);
+        }
         
         return ( numberOfElements != -1 ? numberOfElements : array.length );
     }

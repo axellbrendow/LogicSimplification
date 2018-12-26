@@ -38,38 +38,42 @@ public class KarnaughMap
                 this.variablesNames = variablesNames;
             }
             
-            headOp = new Operation(Operations.OR, 1, '1', new char[0], variablesNames, null);
+            headOp = new Operation(Operations.OR, 0, '?', new char[0], variablesNames, null);
             statistics = new int[numberOfVariables + 1];
             groupsTable = new MintermTable( (int) Math.pow(2, numberOfVariables) );
             
             graySequence2 = Logic.getGraySequence(numberOfVariables / 2);
-            graySequence1 = Logic.getGraySequence(numberOfVariables - graySequence2[0].length);
-
-            char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
-            mintermsMap = new char[graySequence1.length][graySequence2.length];
-            decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
-            usedMinterms = new int[(int) Math.pow(getTotalNumberOfCombinationsBetweenVariables(), 2)];
-            char[] currentMinterm;
-            int grayIndex;
-
-            for (int i = 0; i < graySequence1.length; i++)
+            
+            if (graySequence2 != null)
             {
-                for (int j = 0; j < graySequence2.length; j++)
-                {
-                    currentMinterm = getCorrespondingGrayNumber(i, j);
-                    
-                    decimalMintermsMap[i][j] = MATH.binaryToDecimal(currentMinterm);
-                    
-                    grayIndex = Array.indexOf(currentMinterm, mintermsAsBinary);
-                    
-                    if (grayIndex == -1)
-                    {
-                        mintermsMap[i][j] = '0';
-                    }
+                graySequence1 = Logic.getGraySequence(numberOfVariables - graySequence2[0].length);
 
-                    else
+                char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
+                mintermsMap = new char[graySequence1.length][graySequence2.length];
+                decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
+                usedMinterms = new int[(int) Math.pow(getTotalNumberOfCombinationsBetweenVariables(), 2)];
+                char[] currentMinterm;
+                int grayIndex;
+
+                for (int i = 0; i < graySequence1.length; i++)
+                {
+                    for (int j = 0; j < graySequence2.length; j++)
                     {
-                        mintermsMap[i][j] = (mintermTable.table[grayIndex].mintermsAsDecimal[0] >= 0 ? '1' : 'x');
+                        currentMinterm = getCorrespondingGrayNumber(i, j);
+
+                        decimalMintermsMap[i][j] = MATH.binaryToDecimal(currentMinterm);
+
+                        grayIndex = Array.indexOf(currentMinterm, mintermsAsBinary);
+
+                        if (grayIndex == -1)
+                        {
+                            mintermsMap[i][j] = '0';
+                        }
+
+                        else
+                        {
+                            mintermsMap[i][j] = (mintermTable.table[grayIndex].mintermsAsDecimal[0] >= 0 ? '1' : 'x');
+                        }
                     }
                 }
             }
@@ -549,6 +553,11 @@ public class KarnaughMap
         return dontCaresCount;
     }
     
+    private boolean variationIsLessThan(int maxVariation, int num1, int num2)
+    {
+        return ( Math.abs(num1 - num2) < maxVariation );
+    }
+    
     /**
      * Decide qual grupo de mintermos, {@code group1} ou {@code group2}, e'
      * melhor para a simplificacao final.
@@ -581,6 +590,19 @@ public class KarnaughMap
             pointsOfGroup2 += 20;
         }/*
         
+        if (variationIsLessThan(2, numberOfSimplificationsOfGroup1, numberOfSimplificationsOfGroup2))
+        {
+            if (group1.numberOfReflectionsByHD2 < group2.numberOfReflectionsByHD2)
+            {
+                pointsOfGroup1 += 30;
+            }
+
+            else if (group2.numberOfReflectionsByHD2 < group1.numberOfReflectionsByHD2)
+            {
+                pointsOfGroup2 += 30;
+            }
+        }
+        
         if (numberOfNotUsedMintermsOfGroup1 > numberOfNotUsedMintermsOfGroup2)
         {
             pointsOfGroup1 += 30;
@@ -589,7 +611,7 @@ public class KarnaughMap
         else if (numberOfNotUsedMintermsOfGroup2 > numberOfNotUsedMintermsOfGroup1)
         {
             pointsOfGroup2 += 30;
-        }*//*
+        }*/
         
         if (effectiveSizeOfGroup1 > effectiveSizeOfGroup2)
         {
@@ -599,7 +621,7 @@ public class KarnaughMap
         else if (effectiveSizeOfGroup2 > effectiveSizeOfGroup1)
         {
             pointsOfGroup2 += 30;
-        }*/
+        }
         
         if (pointsOfGroup2 > pointsOfGroup1)
         {
@@ -883,7 +905,6 @@ public class KarnaughMap
             groupsTable = removeGroupsThatAllMintermsWereUsed(groupsTable);
             getStatistics();
             simplify();
-            IO.println("" + headOp);
         }
     }
     
@@ -1234,7 +1255,7 @@ public class KarnaughMap
     
     private void simplifyOperandsByHD1(Operation groupOperation, int indexOfOperand1, int indexOfOperand2, int[][] indexesOfHD1Bits)
     {
-        groupOperation.getOperand(indexOfOperand1).removeOperand(indexesOfHD1Bits[1][0]);
+        groupOperation.getOperand(indexOfOperand1).removeOperandFromList(indexesOfHD1Bits[1][0]);
         groupOperation.removeOperand(indexOfOperand2);
     }
     
@@ -1258,17 +1279,20 @@ public class KarnaughMap
         
         Operation newOp = connectedOperation.addOperand(op, auxiliarValue);
         
-        newOp.addOperand
-        (groupOperation.getOperand(indexOfOperand1 + indexesOfHD2Bits[0][0])
-            .getOperand(indexesOfHD2Bits[1][0]));
+        Operation operand1 =
+        groupOperation.getOperand(indexOfOperand1 + indexesOfHD2Bits[0][0])
+            .getOperand(indexesOfHD2Bits[1][0]);
         
-        newOp.addOperand
-        (groupOperation.getOperand(indexOfOperand1 + indexesOfHD2Bits[0][1])
-            .getOperand(indexesOfHD2Bits[1][1]));
+        Operation operand2 =
+        groupOperation.getOperand(indexOfOperand1 + indexesOfHD2Bits[0][1])
+            .getOperand(indexesOfHD2Bits[1][1]);
         
         groupOperation.removeOperand(indexOfOperand1);
-        connectedOperation.removeOperand(indexesOfHD2Bits[1][0]);
-        connectedOperation.removeOperand(indexesOfHD2Bits[1][1]);
+        connectedOperation.removeOperandFromList(indexesOfHD2Bits[1][0]);
+        connectedOperation.removeOperandFromList(indexesOfHD2Bits[1][1] - 1);
+        
+        newOp.addOperand(operand1);
+        newOp.addOperand(operand2);
     }
     
     private void simplifyGroupOperation(Operation groupOperation)
@@ -1280,45 +1304,73 @@ public class KarnaughMap
         {
             for (int i = 0; i < numberOfOperands; i += 2)
             {
-                indexesOfHDBits = 
+                indexesOfHDBits =
                 getIndexesOfHDBits
                 (
                     groupOperation.getOperand(i),
                     groupOperation.getOperand(i + 1)
                 );
-                
+
                 switch (indexesOfHDBits[0].length)
                 {
                     case 1:
                         simplifyOperandsByHD1(groupOperation, i, i + 1, indexesOfHDBits);
                         break;
-                        
+
                     case 2:
                         simplifyOperandsByHD2(groupOperation, i, i + 1, indexesOfHDBits);
                         break;
-                        
+
                     default:
                         break;
                 }
             }
             
+            groupOperation.cleanOperands();
             numberOfOperands = groupOperation.getNumberOfOperands();
+        }
+    }
+    
+    private void eraseHD1Bits()
+    {
+        TableLine tableLine;
+        int numberOfVariables = getNumberOfVariables();
+
+        for (int i = 0; i < groupsTable.numberOfLines; i++)
+        {
+            tableLine = groupsTable.table[i];
+
+            for (int nthHDMinterm : tableLine.nthHDMinterms)
+            {
+                tableLine.mintermAsBinary[numberOfVariables - 1 - nthHDMinterm] = '_';
+            }
         }
     }
     
     private void simplify()
     {
-        Operation groupOperation;
-        
-        for (int i = 0; i < groupsTable.numberOfLines; i++)
+        if (groupingMode == GroupingMode.HD1)
         {
-            groupOperation = getGroupOperation(groupsTable.table[i], headOp);
-            
-            headOp.addOperandWithoutMergeIt(groupOperation);
-            
-            simplifyGroupOperation(groupOperation);
-            
+            eraseHD1Bits();
+        }
+        
+        else
+        {
+            Operation groupOperation;
+
+            for (int i = 0; i < groupsTable.numberOfLines; i++)
+            {
+                groupOperation = getGroupOperation(groupsTable.table[i], headOp);
+
+                simplifyGroupOperation(groupOperation);
+
+                groupOperation.mergeTreeIfIsPossible();
+                groupOperation.removeOperationsWithOnlyOneOperand();
+            }
+
             headOp.mergeTreeIfIsPossible();
+            headOp.mintermAsBinary = headOp.getOperand(0).mintermAsBinary;
+            headOp.variablesNames = headOp.getOperand(0).variablesNames;
         }
     }
     
@@ -1468,8 +1520,8 @@ public class KarnaughMap
 
     public void printExpression()
     {
-        if (groupsTable != null && groupsTable.numberOfLines > 0 &&
-                groupingMode == GroupingMode.HD1)
+        if (groupingMode == GroupingMode.HD1 && groupsTable != null &&
+                groupsTable.numberOfLines > 0)
         {
             String expression = getExpression(groupsTable.table[0].mintermAsBinary);
 
@@ -1479,6 +1531,16 @@ public class KarnaughMap
             }
 
             IO.println(expression);
+        }
+        
+        else if (headOp != null)
+        {
+            headOp.printOperation();
+        }
+        
+        else
+        {
+            IO.println("0");
         }
     }
 }
