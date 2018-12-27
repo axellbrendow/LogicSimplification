@@ -5,7 +5,7 @@ import Util.IO;
 import java.util.Arrays;
 
 /**
- * @author Axell Brendow (https://github.com/axell-brendow)
+ * @author Axell Brendow ( https://github.com/axell-brendow )
  */
 
 public class TableLine
