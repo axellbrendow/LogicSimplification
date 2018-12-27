@@ -3,7 +3,7 @@ package Structures;
 import Util.*;
 
 /**
- * @author Axell Brendow (https://github.com/axell-brendow)
+ * @author Axell Brendow ( https://github.com/axell-brendow )
  */
 
 public class KarnaughMap

@@ -4,7 +4,7 @@ import Structures.*;
 import Util.IO;
 
 /**
- * @author Axell Brendow (https://github.com/axell-brendow)
+ * @author Axell Brendow ( https://github.com/axell-brendow )
  */
 
 public class QuineMcCluskey
