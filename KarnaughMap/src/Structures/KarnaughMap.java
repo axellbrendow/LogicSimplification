@@ -4,7 +4,7 @@ import Util.*;
 import java.util.Arrays;
 
 /**
- * @author Axell Brendow (https://github.com/axell-brendow)
+ * @author Axell Brendow ( https://github.com/axell-brendow )
  */
 
 public class KarnaughMap
