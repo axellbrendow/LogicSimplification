@@ -222,7 +222,11 @@ public class Operation
     public Operation addOperand(int index, Operation operand)
     {
         operands.add(index, operand);
-        operand.connectedOperation = this;
+        
+        if (operand != null)
+        {
+            operand.connectedOperation = this;
+        }
         
         return operand;
     }
