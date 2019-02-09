@@ -4,7 +4,7 @@ import Structures.*;
 import Util.IO;
 
 /**
- * @author Axell Brendow (https://github.com/axell-brendow)
+ * @author Axell Brendow ( https://github.com/axell-brendow )
  */
 
 public class QuineMcCluskey
@@ -26,9 +26,15 @@ public class QuineMcCluskey
         MintermTable mintermsTable = MintermTable.getMintermsTable(truthTable);
         int groupNumber = 1;
         
-        IO.println("\nMapa de Karnaugh:\n");
         KarnaughMap karnaughMap = new KarnaughMap(mintermsTable, namesOfVariables);
-        karnaughMap.printMap();
+        
+        IO.println("\nMapa de Karnaugh:");
+        
+        IO.println("\nValores logicos:\n");
+        karnaughMap.printMapWithLogicValues();
+        
+        IO.println("\nValores decimais:\n");
+        karnaughMap.printMapWithMintermsAsDecimal();
         
         IO.println("\nMintermos:");
         mintermsTable.printTable(); // Imprime a tabela
