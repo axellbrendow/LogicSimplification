@@ -101,7 +101,17 @@ public class CoverageMap
         
         return coverageMap;
     }
-
+    
+    public int getNumberOfLines()
+    {
+        return ( mintermsMap != null ? mintermsMap.length : 0 );
+    }
+    
+    public int getNumberOfColumns()
+    {
+        return ( mintermsMap != null && mintermsMap[0] != null ? mintermsMap[0].length : 0 );
+    }
+    
     /**
      * Este metodo deve ser chamado antes do metodo proceed. Ele e'
      * responsavel por procurar todos os primos implicantes essenciais
@@ -489,7 +499,67 @@ public class CoverageMap
             isPossibleToSimplify = false;
         }
     }
+    
+    private int getMintermUsage(int column)
+    {
+        int usage = 0;
+        int numberOfLines = getNumberOfLines();
+        
+        for (int i = 0; i < numberOfLines; i++)
+        {
+            if (mintermsMap[i][column] == 'x')
+            {
+                usage++;
+            }
+        }
+        
+        return usage;
+    }
+    
+    private void printHeader(int lengthOfFirstColumn, int lengthOfGreatestMinterm)
+    {
+        String line = Strings.createClonesAndConcatThem(" ", lengthOfFirstColumn);
 
+        for (int minterm : mintermsAsDecimal)
+        {
+            line += " " + Strings.centerStrOnABlock("" + minterm, lengthOfGreatestMinterm);
+        }
+
+        IO.println(line);
+    }
+    
+    private void printMapLines(int lengthOfFirstColumn, int lengthOfGreatestMinterm)
+    {
+        String line;
+        int numberOfLines = getNumberOfLines();
+        
+        for (int i = 0; i < numberOfLines; i++)
+        {
+            line = Strings.centerStrOnABlock(TableLine.getBinaryRepresentation(mintermsAsBinary[i]), lengthOfFirstColumn);
+
+            for (char c : mintermsMap[i])
+            {
+                line += " " + Strings.centerStrOnABlock("" + c, lengthOfGreatestMinterm);
+            }
+
+            IO.println(line);
+        }
+    }
+    
+    private void printMintermsUsage(int lengthOfFirstColumn, int lengthOfGreatestMinterm)
+    {
+        String line = Strings.centerStrOnABlock("Usos:", lengthOfFirstColumn);
+        
+        int numberOfColumns = getNumberOfColumns();
+        
+        for (int i = 0; i < numberOfColumns; i++)
+        {
+            line += " " + Strings.centerStrOnABlock("" + getMintermUsage(i), lengthOfGreatestMinterm);
+        }
+        
+        IO.println(line);
+    }
+    
     /**
      *Imprime o mapa de cobertura no seguinte formato:
      * 
@@ -520,27 +590,13 @@ public class CoverageMap
         int greatestMinterm = Array.getGreatest(mintermsAsDecimal);
         int lengthOfGreatestMinterm = ( greatestMinterm > 0 ? 1 + (int) Math.log10(greatestMinterm) : 1 );
         int numberOfVariables = mintermsAsBinary[0].length;
-
-        String line = Strings.createClonesAndConcatThem(" ", numberOfVariables);
-
-        for (int minterm : mintermsAsDecimal)
-        {
-            line += " " + Strings.centerStrOnABlock("" + minterm, lengthOfGreatestMinterm);
-        }
-
-        IO.println(line);
-
-        for (int i = 0; i < mintermsMap.length; i++)
-        {
-            line = TableLine.getBinaryRepresentation(mintermsAsBinary[i]);
-
-            for (char c : mintermsMap[i])
-            {
-                line += " " + Strings.centerStrOnABlock("" + c, lengthOfGreatestMinterm);
-            }
-
-            IO.println(line);
-        }
+        int lengthOfFirstColumn =
+                ( numberOfVariables >= "Usos:".length() ?
+                numberOfVariables : "Usos:".length() );
+        
+        printHeader(lengthOfFirstColumn, lengthOfGreatestMinterm);
+        printMapLines(lengthOfFirstColumn, lengthOfGreatestMinterm);
+        printMintermsUsage(lengthOfFirstColumn, lengthOfGreatestMinterm);
     }
 
     /**

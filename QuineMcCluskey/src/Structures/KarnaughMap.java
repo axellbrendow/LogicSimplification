@@ -27,13 +27,12 @@ public class KarnaughMap
 
             graySequence2 = getGraySequence(numberOfVariables / 2);
             graySequence1 = getGraySequence(numberOfVariables - graySequence2[0].length);
+            
+            mintermsMap = new char[graySequence1.length][graySequence2.length];
+            decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
 
             char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
-            char[][] mintermsMap = new char[graySequence1.length][graySequence2.length];
-            decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
             char[] currentMinterm;
-            
-            this.mintermsMap = mintermsMap;
 
             for (int i = 0; i < graySequence1.length; i++)
             {
