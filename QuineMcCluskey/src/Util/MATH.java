@@ -96,4 +96,29 @@ public class MATH
         
         return binary;
     }
+    
+    /**
+     * Converte um binario para inteiro decimal. Para que a conversao seja feita
+     * corretamente o numero binario tem que estar no formato little endian.
+     * 
+     * <p>Ex: binaryToDecimal( { '0', '0', '1', '1', '0' } ) = 12</p>
+     * 
+     * <p>A leitura do numero e' feita da direita para a esquerda: 01100</p>
+     * 
+     * @param binary binario a ser convertido
+     * 
+     * @return Conversao do binario, em little endian, para inteiro decimal.
+     */
+    
+    public static int binaryToDecimal(char[] binary)
+    {
+        int decimal = 0;
+        
+        for (int i = 0; i < binary.length; i++)
+        {
+            decimal += ( binary[i] == '1' ? (int) Math.pow(2, i) : 0 );
+        }
+        
+        return decimal;
+    }
 }
