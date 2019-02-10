@@ -1520,27 +1520,30 @@ public class KarnaughMap
 
     public void printExpression()
     {
-        if (groupingMode == GroupingMode.HD1 && groupsTable != null &&
-                groupsTable.numberOfLines > 0)
+        if (variablesNames != null)
         {
-            String expression = getExpression(groupsTable.table[0].mintermAsBinary);
-
-            for (int i = 1; i < groupsTable.numberOfLines; i++)
+            if (groupingMode == GroupingMode.HD1 && groupsTable != null &&
+                    groupsTable.numberOfLines > 0)
             {
-                expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
+                String expression = getExpression(groupsTable.table[0].mintermAsBinary);
+
+                for (int i = 1; i < groupsTable.numberOfLines; i++)
+                {
+                    expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
+                }
+
+                IO.println(expression);
             }
 
-            IO.println(expression);
-        }
-        
-        else if (headOp != null)
-        {
-            headOp.printOperation();
-        }
-        
-        else
-        {
-            IO.println("0");
+            else if (headOp != null)
+            {
+                headOp.printOperation();
+            }
+
+            else
+            {
+                IO.println("0");
+            }
         }
     }
 }
