@@ -1269,22 +1269,25 @@ public class KarnaughMap
 
     public void printExpression()
     {
-        if (groupsTable != null && groupsTable.numberOfLines > 0 &&
-                groupingMode == GroupingMode.HD1)
+        if (variablesNames != null)
         {
-            String expression = getExpression(groupsTable.table[0].mintermAsBinary);
-
-            for (int i = 1; i < groupsTable.numberOfLines; i++)
+            if (groupsTable != null && groupsTable.numberOfLines > 0 &&
+                    groupingMode == GroupingMode.HD1)
             {
-                expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
+                String expression = getExpression(groupsTable.table[0].mintermAsBinary);
+
+                for (int i = 1; i < groupsTable.numberOfLines; i++)
+                {
+                    expression += " + " + getExpression(groupsTable.table[i].mintermAsBinary);
+                }
+
+                IO.println(expression);
             }
 
-            IO.println(expression);
-        }
-        
-        else if (groupingMode == GroupingMode.HD2)
-        {
-            IO.println("Esta versao do programa nao gera expressoes simplificadas por distancia hamming de 2");
+            else if (groupingMode == GroupingMode.HD2)
+            {
+                IO.println("Esta versao do programa nao gera expressoes simplificadas por distancia hamming de 2");
+            }
         }
     }
 }
