@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.Arrays;
 
 /**
- * @author Axell Brendow (https://github.com/axell-brendow)
+ * @author Axell Brendow ( https://github.com/axell-brendow )
  */
 
 public class QuineMcCluskey
@@ -12,42 +12,41 @@ public class QuineMcCluskey
         char[][] graySequence1;
         char[][] graySequence2;
         char[][] mintermsMap;
+        int[][] decimalMintermsMap;
         String[] variablesNames;
-        
+
         public KarnaughMap(MintermTable mintermTable, String[] variablesNames)
         {
             if (mintermTable != null && mintermTable.numberOfLines > 0)
             {
                 int numberOfVariables = mintermTable.table[0].mintermAsBinary.length;
-                
+
                 if (variablesNames != null && numberOfVariables == variablesNames.length)
                 {
                     this.variablesNames = variablesNames;
                 }
-                
+
                 graySequence2 = getGraySequence(numberOfVariables / 2);
                 graySequence1 = getGraySequence(numberOfVariables - graySequence2[0].length);
-                
+
+                mintermsMap = new char[graySequence1.length][graySequence2.length];
+                decimalMintermsMap = new int[graySequence1.length][graySequence2.length];
+
                 char[][] mintermsAsBinary = mintermTable.getAllMintermsAsBinary();
-                char[][] mintermsMap = new char[graySequence1.length][graySequence2.length];
-                
-                this.mintermsMap = mintermsMap;
-                
+                char[] currentMinterm;
+
                 for (int i = 0; i < graySequence1.length; i++)
                 {
                     for (int j = 0; j < graySequence2.length; j++)
                     {
-                        if
-                        (
-                            indexOf(
-                                concatArrays(graySequence2[j], graySequence1[i]),
-                                mintermsAsBinary
-                            ) == -1
-                        )
+                        currentMinterm = getCorrespondingGrayNumber(i, j);
+                        decimalMintermsMap[i][j] = binaryToDecimal(currentMinterm);
+
+                        if (indexOf(currentMinterm, mintermsAsBinary) == -1)
                         {
                             mintermsMap[i][j] = '0';
                         }
-                        
+
                         else
                         {
                             mintermsMap[i][j] = '1';
@@ -56,7 +55,78 @@ public class QuineMcCluskey
                 }
             }
         }
-        
+
+        /**
+         * Obtem o numero de gray correspondente ao mintermo da linha e coluna
+         * especificada.
+         * 
+         * <p>Exemplo:</p>
+         * <p>Considerando um mapa de Karnaugh de duas variaveis:</p>
+         * 
+         * <table>
+         *  <tr>
+         *      <td>a\b</td> <td>0</td> <td>1</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>0</td> <td>0</td> <td>0</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>1</td> <td>0</td> <td>0</td>
+         *  </tr>
+         * </table>
+         * 
+         * <p>getCorrespondingGrayNumber(0, 1) = { '1', '0' }</p>
+         * <p>E' importante lembrar que o numero esta' como little endian, ou seja,
+         * sua leitura e' feita da direita para a esquerda: 01</p>
+         * 
+         * @param mintermLine indice da linha do mintermo
+         * @param mintermColumn indice da coluna do mintermo
+         * 
+         * @return Numero de gray do mintermo
+         */
+
+        private char[] getCorrespondingGrayNumber(int mintermLine, int mintermColumn)
+        {
+            return concatArrays(graySequence2[mintermColumn], graySequence1[mintermLine]);
+        }
+
+        private boolean hasGraySequences()
+        {
+            return graySequence1 != null && graySequence2 != null;
+        }
+
+        private boolean hasVariablesNames()
+        {
+            return variablesNames != null;
+        }
+
+        private int getNumberOfLines()
+        {
+            return graySequence1.length;
+        }
+
+        private int getNumberOfColumns()
+        {
+            return graySequence2.length;
+        }
+
+        private int getNumberOfVariablesOfGray1()
+        {
+            return graySequence1[0].length;
+        }
+
+        private int getNumberOfVariablesOfGray2()
+        {
+            return graySequence2[0].length;
+        }
+
+        private int getNumberOfVariables()
+        {
+            return getNumberOfVariablesOfGray1() + getNumberOfVariablesOfGray2();
+        }
+
         /**
          * Gera a sequencia de gray para a quantidade de bits especificada no
          * formato de armazenamento little endian. O bit menos significativo
@@ -77,28 +147,28 @@ public class QuineMcCluskey
          * @return Um arranjo em que em cada uma de suas posicoes sai um arranjo
          * de caracteres sendo cada um destes um numero da sequencia.
          */
-        
+
         public static final char[][] getGraySequence(int numberOfBits)
         {
             char[][] graySequence = null;
-            
+
             if (numberOfBits > 0)
             {
                 int numberOfLines = (int) Math.pow(2, numberOfBits);
                 graySequence = new char[numberOfLines][numberOfBits];
                 graySequence[0][0] = '0';
                 graySequence[1][0] = '1';
-                
+
                 int currentNumberOfLines;
                 int lastMirrorLine;
-                
+
                 for (int currentNumberOfBits = 1;
                         currentNumberOfBits < numberOfBits;
                         currentNumberOfBits++)
                 {
                     currentNumberOfLines = (int) Math.pow(2, currentNumberOfBits);
                     lastMirrorLine = currentNumberOfLines * 2 - 1;
-                    
+
                     for (int j = 0; j < currentNumberOfBits; j++)
                     {
                         for (int currentLine = currentNumberOfLines - 1;
@@ -108,7 +178,7 @@ public class QuineMcCluskey
                             graySequence[lastMirrorLine - currentLine][j] = graySequence[currentLine][j];
                         }
                     }
-                    
+
                     for (int currentLine = currentNumberOfLines - 1;
                             currentLine > -1;
                             currentLine--)
@@ -118,15 +188,77 @@ public class QuineMcCluskey
                     }
                 }
             }
-            
+
             return graySequence;
         }
-        
+
+        /**
+         * Concatena os nomes das variaveis da funcao logica. Coloca uma \ (barra invertida)
+         * no meio da string. Caso a funcao logica tenha uma quantidade impar de
+         * variaveis, a barra e' colocada imediatamente apos a metade.
+         * 
+         * <p>Ex: "abc\de"</p>
+         * 
+         * @return Concatenacao dos nomes das variaveis da funcao logica com uma barra
+         * no meio.
+         */
+
+        private String getVariablesNames()
+        {
+            String names = "";
+            int numberOfVariablesOfGray1 = getNumberOfVariablesOfGray1();
+            int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
+
+            for (int i = 0; i < numberOfVariablesOfGray1; i++)
+            {
+                names += variablesNames[i];
+            }
+
+            names += "\\";
+
+            for (int i = 0; i < numberOfVariablesOfGray2; i++)
+            {
+                names += variablesNames[i + numberOfVariablesOfGray1];
+            }
+
+            return names;
+        }
+
+        /**
+         * O cabecalho do mapa de Karnaugh e' composto pelos nomes das variaveis
+         * da funcao logica e, logo a direita, de uma sequencia de gray em que a
+         * quantidade de bits e' metade da quantidade de variaveis.
+         * 
+         * <p>Ex: "abc\de 00 01 11 10"</p>
+         * 
+         * @return Sequencia de gray do cabecalho.
+         */
+
+        private String getHeaderGraySequence()
+        {
+            int numberOfColumns = getNumberOfColumns();
+            int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
+
+            String headerGraySequence = "";
+
+            for (int i = 0; i < numberOfColumns; i++)
+            {
+                headerGraySequence += " " +
+                        centerStrOnABlock
+                        (
+                            TableLine.getBinaryRepresentation(graySequence2[i]),
+                            numberOfVariablesOfGray2
+                        );
+            }
+
+            return headerGraySequence;
+        }
+
         /**
          *Imprime o mapa de Karnaugh no seguinte formato:
          * 
-         * <br></br>
-         * <br></br>
+         * <p></p>
+         * <p></p>
          * 
          * <table>
          *  <tr>
@@ -170,49 +302,22 @@ public class QuineMcCluskey
          * decimais os representantes de cada mintermo. Cada um destes sera'
          * substituido pelo valor logico 0 ou 1 de acordo com a tabela verdade.</p>
          */
-        
-        public void printMap()
+
+        public void printMapWithLogicValues()
         {
-            if (graySequence1 != null && graySequence2 != null && variablesNames != null)
+            if (hasGraySequences() && hasVariablesNames())
             {
-                String line = "";
-                int numberOfVariablesOfGray1 = graySequence1[0].length;
-                int numberOfVariablesOfGray2 = graySequence2[0].length;
-
-                for (int i = 0; i < numberOfVariablesOfGray1; i++)
-                {
-                    line += variablesNames[i];
-                }
-
-                line += "\\";
-
-                for (int i = 0; i < numberOfVariablesOfGray2; i++)
-                {
-                    line += variablesNames[i + numberOfVariablesOfGray1];
-                }
-
+                String line = getVariablesNames();
                 int firstColumnSize = line.length();
+                int numberOfLines = getNumberOfLines();
+                int numberOfColumns = getNumberOfColumns();
+                int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
 
-                if (numberOfVariablesOfGray1 > firstColumnSize)
-                {
-                    firstColumnSize = numberOfVariablesOfGray1;
-                }
-
-                line = centerStrOnABlock(line, firstColumnSize);
-
-                for (int i = 0; i < graySequence2.length; i++)
-                {
-                    line += " " +
-                            centerStrOnABlock
-                            (
-                                TableLine.getBinaryRepresentation(graySequence2[i]),
-                                numberOfVariablesOfGray2
-                            );
-                }
+                line += getHeaderGraySequence();
 
                 println(line + "\n");
 
-                for (int i = 0; i < graySequence1.length; i++)
+                for (int i = 0; i < numberOfLines; i++)
                 {
                     line = centerStrOnABlock
                             (
@@ -220,9 +325,94 @@ public class QuineMcCluskey
                                 firstColumnSize
                             );
 
-                    for (int j = 0; j < graySequence2.length; j++)
+                    for (int j = 0; j < numberOfColumns; j++)
                     {
                         line += " " + centerStrOnABlock("" + mintermsMap[i][j], numberOfVariablesOfGray2);
+                    }
+
+                    println(line);
+                }
+            }
+        }
+
+        /**
+         *Imprime o mapa de Karnaugh no seguinte formato:
+         * 
+         * <p></p>
+         * <p></p>
+         * 
+         * <table>
+         *  <tr>
+         *      <td>abc\de</td> <td>00</td> <td>01</td> <td>11</td> <td>10</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>000</td> <td>0</td> <td>1</td> <td>3</td> <td>2</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>001</td> <td>4</td> <td>5</td> <td>7</td> <td>6</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>011</td> <td>12</td> <td>13</td> <td>15</td> <td>14</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>010</td> <td>8</td> <td>9</td> <td>11</td> <td>10</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>110</td> <td>24</td> <td>25</td> <td>27</td> <td>26</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>111</td> <td>28</td> <td>29</td> <td>31</td> <td>30</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>101</td> <td>20</td> <td>21</td> <td>23</td> <td>22</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>100</td> <td>16</td> <td>17</td> <td>19</td> <td>18</td>
+         *  </tr>
+         * </table>
+         * 
+         * <p>Sendo "abc" e "de" os nomes das variaveis escolhidos. E os numeros
+         * decimais os representantes de cada mintermo.</p>
+         */
+
+        public void printMapWithMintermsAsDecimal()
+        {
+            if (hasGraySequences() && hasVariablesNames())
+            {
+                String line = getVariablesNames();
+                int firstColumnSize = line.length();
+                int numberOfLines = getNumberOfLines();
+                int numberOfColumns = getNumberOfColumns();
+                int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
+
+                line += getHeaderGraySequence();
+
+                println(line + "\n");
+
+                for (int i = 0; i < numberOfLines; i++)
+                {
+                    line = centerStrOnABlock
+                            (
+                                TableLine.getBinaryRepresentation(graySequence1[i]),
+                                firstColumnSize
+                            );
+
+                    for (int j = 0; j < numberOfColumns; j++)
+                    {
+                        line += " " +
+                                centerStrOnABlock
+                                (
+                                    "" + decimalMintermsMap[i][j],
+                                    numberOfVariablesOfGray2
+                                );
                     }
 
                     println(line);
@@ -489,7 +679,7 @@ public class QuineMcCluskey
         int counterOfTheSmallestSetOfNonEssentialImplicantPrimes;
         int cursorOfTheSmallestSetOfNonEssentialImplicantPrimes;
         boolean calledFindTheSmallestSetOfNonEssentialImplicantPrimes;
-        
+
         public CoverageMap(int[] mintermsAsDecimal, char[][] mintermsAsBinary, char[][] mintermsMap)
         {
             this.mintermsAsDecimal = mintermsAsDecimal;
@@ -512,78 +702,83 @@ public class QuineMcCluskey
             this.isPossibleToSimplify = true;
             this.calledFindTheSmallestSetOfNonEssentialImplicantPrimes = false;
         }
-        
-        /**
-         *Imprime o mapa de cobertura no seguinte formato:
-         * 
-         * <br></br>
-         * <br></br>
-         * 
-         * <table>
-         *  <tr>
-         *      <td>   </td> <td>0</td> <td>2</td> <td>5</td> <td>7</td>
-         *  </tr>
-         * 
-         *  <tr>
-         *      <td>0_0</td> <td>x</td> <td>x</td> <td> </td> <td> </td>
-         *  </tr>
-         * 
-         *  <tr>
-         *      <td>1_1</td> <td> </td> <td> </td> <td>x</td> <td>x</td>
-         *  </tr>
-         * </table>
-         * 
-         * <p>Sendo "0_0" e "1_1" as simplificacoes encontradas; "0 2 5 7" os
-         * mintermos envolvidos; "x" a marcacao que indica quais sao os
-         * mintermos que levaram a cada simplificacao de cada linha.</p>
-         */
-        
-        public void printMap()
+
+        public boolean isPossibleToSimplify()
         {
-            int greatestMinterm = getGreatest(mintermsAsDecimal);
-            int lengthOfGreatestMinterm = ( greatestMinterm > 0 ? 1 + (int) Math.log10(greatestMinterm) : 1 );
-            int numberOfVariables = mintermsAsBinary[0].length;
-            
-            String line = createClonesAndConcatThem(" ", numberOfVariables);
-            
-            for (int minterm : mintermsAsDecimal)
-            {
-                line += " " + centerStrOnABlock("" + minterm, lengthOfGreatestMinterm);
-            }
-            
-            println(line);
-            
-            for (int i = 0; i < mintermsMap.length; i++)
-            {
-                line = TableLine.getBinaryRepresentation(mintermsAsBinary[i]);
-                
-                for (char c : mintermsMap[i])
-                {
-                    line += " " + centerStrOnABlock("" + c, lengthOfGreatestMinterm);
-                }
-                
-                println(line);
-            }
+            return isPossibleToSimplify;
         }
-        
+
+        /**
+         * Recebe uma tabela de mintermos nao simplificavel e gera um mapa de
+         * cobertura com as simplificacoes finais dessa tabela, onde cada
+         * simplificacao sera' um primo implicante no mapa.
+         * 
+         * @param mintermTable tabela de mintermos nao simplificavel
+         * 
+         * @return Um mapa de cobertura com as simplificacoes finais da tabela.
+         */
+
+        public static CoverageMap getCoverageMap(MintermTable mintermTable)
+        {
+            CoverageMap coverageMap = null;
+
+            if (mintermTable != null)
+            {
+                int numberOfLines = mintermTable.numberOfLines;
+
+                if (numberOfLines > 0)
+                {
+                    int[] mintermsAsDecimal = getAllMintermsInCrescentOrder(mintermTable);
+                    char[][] mintermsMap = new char[numberOfLines][mintermsAsDecimal.length];
+                    int[] mintermsOfCurrentLine;
+
+                    for (int i = 0; i < numberOfLines; i++)
+                    {
+                        Arrays.fill(mintermsMap[i], ' ');
+
+                        mintermsOfCurrentLine = mintermTable.table[i].mintermsAsDecimal;
+
+                        for (int minterm : mintermsOfCurrentLine)
+                        {
+                            mintermsMap[i][Arrays.binarySearch(mintermsAsDecimal, minterm)] = 'x';
+                        }
+                    }
+
+                    coverageMap = new CoverageMap(mintermsAsDecimal, mintermTable.getAllMintermsAsBinary(), mintermsMap);
+                }
+            }
+
+            return coverageMap;
+        }
+
+        public int getNumberOfLines()
+        {
+            return ( mintermsMap != null ? mintermsMap.length : 0 );
+        }
+
+        public int getNumberOfColumns()
+        {
+            return ( mintermsMap != null && mintermsMap[0] != null ? mintermsMap[0].length : 0 );
+        }
+
         /**
          * Este metodo deve ser chamado antes do metodo proceed. Ele e'
          * responsavel por procurar todos os primos implicantes essenciais
          * no mapa de cobertura.
          */
-        
+
         public void findEssentialImplicantPrimes()
         {
             int numberOfImplicantPrimes;
             int lineOfImplicantPrime;
             int numberOfLines = mintermsMap.length;
             int numberOfColumns = mintermsMap[0].length;
-            
+
             for (int j = 0; j < numberOfColumns; j++)
             {
                 numberOfImplicantPrimes = 0;
                 lineOfImplicantPrime = -1;
-                
+
                 for (int i = 0; i < numberOfLines; i++)
                 {
                     if (mintermsMap[i][j] == 'x')
@@ -592,13 +787,13 @@ public class QuineMcCluskey
                         lineOfImplicantPrime = i;
                     }
                 }
-                
+
                 if (numberOfImplicantPrimes == 1 && indexOf(lineOfImplicantPrime, linesOfEssentialImplicantPrimes) == -1)
                 {
                     linesOfEssentialImplicantPrimes[counterOfLinesOfEssentialImplicantPrimes++] = lineOfImplicantPrime;
                 }
             }
-            
+
             for (int i = 0; i < numberOfLines; i++)
             {
                 if (indexOf(i, linesOfEssentialImplicantPrimes) == -1)
@@ -607,7 +802,7 @@ public class QuineMcCluskey
                 }
             }
         }
-        
+
         /**
          * Este metodo deve ser chamado apos o metodo proceed ter usado todos
          * os primos implicantes essenciais.
@@ -640,7 +835,7 @@ public class QuineMcCluskey
          * de inteiros contendo as linhas de primos implicantes que podem ser
          * escolhidos para cobrir um dos mintermos ainda nao cobridos.
          */
-        
+
         private MintermTable getTableOfLinesOfPrimeImplicantsForEachMinterm()
         {
             MintermTable tableOfLinesOfPrimeImplicantsForEachMinterm = new MintermTable(mintermsMap.length);
@@ -648,11 +843,11 @@ public class QuineMcCluskey
             int linesOfPrimeImplicantsForCurrentMintermCounter;
             int[] definitiveLinesOfPrimeImplicantsForCurrentMinterm;
             char c;
-            
+
             for (int j = 0; j < mintermsMap[0].length; j++)
             {
                 linesOfPrimeImplicantsForCurrentMintermCounter = 0;
-                
+
                 for (int i = 0; i < mintermsMap.length && ( c = mintermsMap[i][j] ) != '|'; i++)
                 {
                     if (c == 'x')
@@ -660,19 +855,19 @@ public class QuineMcCluskey
                         linesOfPrimeImplicantsForCurrentMinterm[linesOfPrimeImplicantsForCurrentMintermCounter++] = i;
                     }
                 }
-                
+
                 if (linesOfPrimeImplicantsForCurrentMintermCounter > 0)
                 {
                     definitiveLinesOfPrimeImplicantsForCurrentMinterm = new int[linesOfPrimeImplicantsForCurrentMintermCounter];
                     System.arraycopy(linesOfPrimeImplicantsForCurrentMinterm, 0, definitiveLinesOfPrimeImplicantsForCurrentMinterm, 0, linesOfPrimeImplicantsForCurrentMintermCounter);
-                    
+
                     tableOfLinesOfPrimeImplicantsForEachMinterm.addLine(definitiveLinesOfPrimeImplicantsForCurrentMinterm, new char[0]);
                 }
             }
-            
+
             return tableOfLinesOfPrimeImplicantsForEachMinterm;
         }
-        
+
         /**
          * Tendo o resultado do metodo getTableOfLinesOfPrimeImplicantsForEachMinterm,
          * analisa e descobre qual e' a menor quantidade de primos implicantes nao
@@ -695,7 +890,7 @@ public class QuineMcCluskey
          * participam do menor grupo de primos implicantes possivel que consegue
          * cobrir todos os mintermos restantes.
          */
-        
+
         private int[] getSmallestSetOfLinesOfPrimeImplicantsThatCoverAllMinterms(int currentLine, MintermTable tableOfLinesOfPrimeImplicantsForEachMinterm, int[] linesOfPrimeImplicantsToIgnore, int counterOfLinesOfPrimeImplicantsToIgnore, int[] smallestSetOfPrimeImplicants)
         {
             if (currentLine < tableOfLinesOfPrimeImplicantsForEachMinterm.numberOfLines)
@@ -720,15 +915,15 @@ public class QuineMcCluskey
                     smallestSetOfPrimeImplicants = getSmallestSetOfLinesOfPrimeImplicantsThatCoverAllMinterms(currentLine + 1, tableOfLinesOfPrimeImplicantsForEachMinterm, linesOfPrimeImplicantsToIgnore, counterOfLinesOfPrimeImplicantsToIgnore, smallestSetOfPrimeImplicants);
                 }
             }
-            
+
             else
             {
                 Arrays.fill(linesOfPrimeImplicantsToIgnore, counterOfLinesOfPrimeImplicantsToIgnore, linesOfPrimeImplicantsToIgnore.length, linesOfPrimeImplicantsToIgnore[0]);
-                
+
                 if (tableOfLinesOfPrimeImplicantsForEachMinterm.eachLineHasOneOrMoreElementsOfTheArray(linesOfPrimeImplicantsToIgnore))
                 {
                     Arrays.fill(linesOfPrimeImplicantsToIgnore, counterOfLinesOfPrimeImplicantsToIgnore, linesOfPrimeImplicantsToIgnore.length, -1);
-                    
+
                     int sizeOfSmallestSetOfPrimeImplicants = indexOf(-1, smallestSetOfPrimeImplicants);
                     sizeOfSmallestSetOfPrimeImplicants = ( sizeOfSmallestSetOfPrimeImplicants == -1 ? smallestSetOfPrimeImplicants.length : sizeOfSmallestSetOfPrimeImplicants );
 
@@ -737,16 +932,16 @@ public class QuineMcCluskey
                         smallestSetOfPrimeImplicants = linesOfPrimeImplicantsToIgnore;
                     }
                 }
-                
+
                 else
                 {
                     Arrays.fill(linesOfPrimeImplicantsToIgnore, counterOfLinesOfPrimeImplicantsToIgnore, linesOfPrimeImplicantsToIgnore.length, -1);
                 }
             }
-            
+
             return smallestSetOfPrimeImplicants;
         }
-        
+
         /**
          * Este metodo deve ser chamado apos o metodo proceed ter usado todos
          * os primos implicantes essenciais. Ele e' responsavel por encontrar
@@ -754,20 +949,20 @@ public class QuineMcCluskey
          * cobrir todos os mintermos restantes e, entao, adicionar as linhas
          * desses primos implicantes num arranjo da classe.
          */
-        
+
         private void findTheSmallestSetOfNonEssentialImplicantPrimes()
         {
             calledFindTheSmallestSetOfNonEssentialImplicantPrimes = true;
-            
+
             if (counterOfNonEssentialImplicantPrimes > 0)
             {
                 MintermTable tableOfLinesOfPrimeImplicantsForEachMinterm = getTableOfLinesOfPrimeImplicantsForEachMinterm();
                 int[] linesOfPrimeImplicantsToIgnore = new int[mintermsMap.length];
                 Arrays.fill(linesOfPrimeImplicantsToIgnore, -1);
-                
+
                 int[] smallestChoice = new int[mintermsMap.length];
                 Arrays.fill(smallestChoice, Integer.MIN_VALUE);
-                
+
                 for (int i = 0; i < tableOfLinesOfPrimeImplicantsForEachMinterm.numberOfLines; i++)
                 {
                     // partindo da linha i, percorre todas as possibilidades de
@@ -775,16 +970,16 @@ public class QuineMcCluskey
                     // os mintermos e retorna a que for composta por menos escolhas
                     smallestChoice = getSmallestSetOfLinesOfPrimeImplicantsThatCoverAllMinterms(i, tableOfLinesOfPrimeImplicantsForEachMinterm, linesOfPrimeImplicantsToIgnore, 0, smallestChoice);
                 }
-                
+
                 int numberOfPrimeImplicants = indexOf(-1, smallestChoice);
                 numberOfPrimeImplicants = ( numberOfPrimeImplicants == -1 ? smallestChoice.length : numberOfPrimeImplicants );
-                
+
                 smallestSetOfNonEssentialImplicantPrimes = new int[numberOfPrimeImplicants];
                 counterOfTheSmallestSetOfNonEssentialImplicantPrimes = numberOfPrimeImplicants;
                 System.arraycopy(smallestChoice, 0, smallestSetOfNonEssentialImplicantPrimes, 0, numberOfPrimeImplicants);
             }
         }
-        
+
         /**
          * Conta quantas marcacoes com "x" ha' na linha especificada.
          * 
@@ -792,19 +987,19 @@ public class QuineMcCluskey
          * 
          * @return Quantas marcacoes com "x" ha' na linha especificada.
          */
-        
+
         private int getLineKills(int lineIndex)
         {
             //int numberOfLines = mintermsMap.length;
             int numberOfColumns = mintermsMap[0].length;
             int lineKills = 0;
-            
+
             for (int j = 0; j < numberOfColumns; j++)
             {
                 if (mintermsMap[lineIndex][j] == 'x')
                 {
                     lineKills++;
-                    
+
                     /*for (int i = lineIndex - 1; i > -1; i--)
                     {
                         if (mintermsMap[i][j] == 'x') lineKills++;
@@ -816,36 +1011,36 @@ public class QuineMcCluskey
                     }*/
                 }
             }
-            
+
             return lineKills;
         }
-        
+
         /**
          * Procura por todo o mapa de cobertura a existencia de alguma marcacao
          * com "x".
          * 
          * @return {@code true} se existir algum "x", caso contrario, {@code false}.
          */
-        
+
         private boolean findUncatchedMinterms()
         {
             boolean found = false;
-            
+
             for (int i = 0; !found && i < mintermsMap.length; i++)
             {
                 found = ( indexOf('x', mintermsMap[i]) != -1 );
             }
-            
+
             return found;
         }
-        
+
         /**
          * Percorre todos os primos implicantes que nao sao essencias e ve qual
          * deles tem mais marcacoes com "x" em sua linha.
          * 
          * @return Indice da linha do primo implicante com mais marcacoes.
          */
-        
+
         private int getLineOfThePrimeImplicantWithMoreKills()
         {
             int lineOfThePrimeImplicantWithMoreKills = -1;
@@ -876,48 +1071,48 @@ public class QuineMcCluskey
                 // apaga o primo implicante que nao era usado
                 nonEssentialImplicantPrimes[indexOfThePrimeImplicantWithMoreKills] = -1;
             }
-            
+
             return lineOfThePrimeImplicantWithMoreKills;
         }
-        
+
         /**
          * Este metodo pode ser chamado tanto para comecar a simplificacao no
          * mapa de cobertura quanto para continuar a simplificacao. Quando o
          * metodo perceber que nao ha' mais como simplificar o campo
          * {@code isPossibleToSimplify} do objeto sera' definido como {@code false}.
          */
-        
+
         public void proceed()
         {
             int lineOfImplicantPrime = -1;
-            
+
             if (cursorOfLinesOfEssentialImplicantPrimes < counterOfLinesOfEssentialImplicantPrimes)
             {
                 lineOfImplicantPrime = linesOfEssentialImplicantPrimes[cursorOfLinesOfEssentialImplicantPrimes++];
             }
-            
+
             else
             {
                 if (!calledFindTheSmallestSetOfNonEssentialImplicantPrimes)
                 {
                     findTheSmallestSetOfNonEssentialImplicantPrimes();
                 }
-                
+
                 if (cursorOfTheSmallestSetOfNonEssentialImplicantPrimes < counterOfTheSmallestSetOfNonEssentialImplicantPrimes)
                 {
                     lineOfImplicantPrime = smallestSetOfNonEssentialImplicantPrimes[cursorOfTheSmallestSetOfNonEssentialImplicantPrimes++];
                 }
                 //lineOfImplicantPrime = getLineOfThePrimeImplicantWithMoreKills();
             }
-            
+
             if (lineOfImplicantPrime != -1)
             {
                 int numberOfLines = mintermsMap.length;
                 int numberOfColumns = mintermsMap[0].length;
-                
+
                 usedImplicantPrimes[counterOfUsedImplicantPrimes++] = lineOfImplicantPrime;
                 statistics[ countChars('_', mintermsAsBinary[lineOfImplicantPrime]) ]++;
-                
+
                 for (int j = 0; j < numberOfColumns; j++)
                 {
                     if (mintermsMap[lineOfImplicantPrime][j] == 'x')
@@ -938,20 +1133,119 @@ public class QuineMcCluskey
                             }
                         }
                     }
-                    
+
                     mintermsMap[lineOfImplicantPrime][j] = '-';
                 }
-                
+
                 isPossibleToSimplify =
                 ( cursorOfLinesOfEssentialImplicantPrimes < counterOfLinesOfEssentialImplicantPrimes ||
                         findUncatchedMinterms()
                 );
             }
-            
+
             else
             {
                 isPossibleToSimplify = false;
             }
+        }
+
+        private int getMintermUsage(int column)
+        {
+            int usage = 0;
+            int numberOfLines = getNumberOfLines();
+
+            for (int i = 0; i < numberOfLines; i++)
+            {
+                if (mintermsMap[i][column] == 'x')
+                {
+                    usage++;
+                }
+            }
+
+            return usage;
+        }
+
+        private void printHeader(int lengthOfFirstColumn, int lengthOfGreatestMinterm)
+        {
+            String line = createClonesAndConcatThem(" ", lengthOfFirstColumn);
+
+            for (int minterm : mintermsAsDecimal)
+            {
+                line += " " + centerStrOnABlock("" + minterm, lengthOfGreatestMinterm);
+            }
+
+            println(line);
+        }
+
+        private void printMapLines(int lengthOfFirstColumn, int lengthOfGreatestMinterm)
+        {
+            String line;
+            int numberOfLines = getNumberOfLines();
+
+            for (int i = 0; i < numberOfLines; i++)
+            {
+                line = centerStrOnABlock(TableLine.getBinaryRepresentation(mintermsAsBinary[i]), lengthOfFirstColumn);
+
+                for (char c : mintermsMap[i])
+                {
+                    line += " " + centerStrOnABlock("" + c, lengthOfGreatestMinterm);
+                }
+
+                println(line);
+            }
+        }
+
+        private void printMintermsUsage(int lengthOfFirstColumn, int lengthOfGreatestMinterm)
+        {
+            String line = centerStrOnABlock("Usos:", lengthOfFirstColumn);
+
+            int numberOfColumns = getNumberOfColumns();
+
+            for (int i = 0; i < numberOfColumns; i++)
+            {
+                line += " " + centerStrOnABlock("" + getMintermUsage(i), lengthOfGreatestMinterm);
+            }
+
+            println(line);
+        }
+
+        /**
+         *Imprime o mapa de cobertura no seguinte formato:
+         * 
+         * <br></br>
+         * <br></br>
+         * 
+         * <table>
+         *  <tr>
+         *      <td>   </td> <td>0</td> <td>2</td> <td>5</td> <td>7</td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>0_0</td> <td>x</td> <td>x</td> <td> </td> <td> </td>
+         *  </tr>
+         * 
+         *  <tr>
+         *      <td>1_1</td> <td> </td> <td> </td> <td>x</td> <td>x</td>
+         *  </tr>
+         * </table>
+         * 
+         * <p>Sendo "0_0" e "1_1" as simplificacoes encontradas; "0 2 5 7" os
+         * mintermos envolvidos; "x" a marcacao que indica quais sao os
+         * mintermos que levaram a cada simplificacao de cada linha.</p>
+         */
+
+        public void printMap()
+        {
+            int greatestMinterm = getGreatest(mintermsAsDecimal);
+            int lengthOfGreatestMinterm = ( greatestMinterm > 0 ? 1 + (int) Math.log10(greatestMinterm) : 1 );
+            int numberOfVariables = mintermsAsBinary[0].length;
+            int lengthOfFirstColumn =
+                    ( numberOfVariables >= "Usos:".length() ?
+                    numberOfVariables : "Usos:".length() );
+
+            printHeader(lengthOfFirstColumn, lengthOfGreatestMinterm);
+            printMapLines(lengthOfFirstColumn, lengthOfGreatestMinterm);
+            printMintermsUsage(lengthOfFirstColumn, lengthOfGreatestMinterm);
         }
         
         /**
@@ -1173,6 +1467,31 @@ public class QuineMcCluskey
         }
         
         return binary;
+    }
+    
+    /**
+     * Converte um binario para inteiro decimal. Para que a conversao seja feita
+     * corretamente o numero binario tem que estar no formato little endian.
+     * 
+     * <p>Ex: binaryToDecimal( { '0', '0', '1', '1', '0' } ) = 12</p>
+     * 
+     * <p>A leitura do numero e' feita da direita para a esquerda: 01100</p>
+     * 
+     * @param binary binario a ser convertido
+     * 
+     * @return Conversao do binario, em little endian, para inteiro decimal.
+     */
+    
+    public static int binaryToDecimal(char[] binary)
+    {
+        int decimal = 0;
+        
+        for (int i = 0; i < binary.length; i++)
+        {
+            decimal += ( binary[i] == '1' ? (int) Math.pow(2, i) : 0 );
+        }
+        
+        return decimal;
     }
     
     /**
@@ -1913,9 +2232,15 @@ public class QuineMcCluskey
         MintermTable mintermsTable = getMintermsTable(truthTable);
         int groupNumber = 1;
         
-        println("\nMapa de Karnaugh:\n");
         KarnaughMap karnaughMap = new KarnaughMap(mintermsTable, namesOfVariables);
-        karnaughMap.printMap();
+        
+        println("\nMapa de Karnaugh:");
+        
+        println("\nValores logicos:\n");
+        karnaughMap.printMapWithLogicValues();
+        
+        println("\nValores decimais:\n");
+        karnaughMap.printMapWithMintermsAsDecimal();
         
         println("\nMintermos:");
         mintermsTable.printTable(); // Imprime a tabela
