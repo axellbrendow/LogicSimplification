@@ -1284,7 +1284,7 @@ public class KarnaughMap
         
         else if (groupingMode == GroupingMode.HD2)
         {
-        	IO.println("Esta versao do programa nao gera expressoes simplificadas por distancia hamming de 2");
+            IO.println("Esta versao do programa nao gera expressoes simplificadas por distancia hamming de 2");
         }
     }
 }
