@@ -2223,9 +2223,11 @@ public class QuineMcCluskey
         //= SoP(3,5,6,7,10,11,13,17,25,26,30,31,33,34,35,36,38,39,42,43,44,45,46,47,48,50,51,52,53,54,56,58,59,62,63,64,69,70,71,72,73,74,75,77,81,83,85,86,87,88,90,96,98,99,102,103,104,106,110,111,114,118,120,121,122,124,125,126)                                                                                                                      
         
         // Le a tabela verdade
-        String truthTable = readLine("\nEntre com a tabela verdade: ");
+        String truthTable = readLine(
+                "\nEntre com a tabela verdade\n" +
+                "(ex: \"1101\" representa os mintermos 0, 1 e 3): ");
         // Le os nomes das variaveis do circuito
-        String variablesNames = readLine("Entre com os nomes de cada variavel (ex: \"a b c d\"): ");
+        String variablesNames = readLine("\nEntre com os nomes de cada variavel (ex: \"a b c d\"): ");
         String[] namesOfVariables = variablesNames.split(" ");
         
         // Extrai os mintermos e cria uma tabela para eles
