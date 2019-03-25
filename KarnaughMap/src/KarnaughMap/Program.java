@@ -51,6 +51,9 @@ public class Program
         karnaughMap.groupMinterms(groupingMode);
         karnaughMap.printGroups();
         
+        IO.println("");
+        karnaughMap.printGroupsInMap();
+        
         IO.println("\nEstatisticas:\n");
         karnaughMap.printStatistics();
 

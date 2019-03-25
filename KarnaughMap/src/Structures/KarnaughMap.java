@@ -982,7 +982,7 @@ public class KarnaughMap
      *  </tr>
      * </table>
      * 
-     * <p>Sendo "abc" e "de" os nomes das variaveis escolhidos. E os numeros
+     * <p>Sendo "abc" e "de" os nomes escolhidos para as variaveis, e os numeros
      * decimais os representantes de cada mintermo. Cada um destes sera'
      * substituido pelo valor logico 0 ou 1 de acordo com a tabela verdade.</p>
      */
@@ -1063,7 +1063,7 @@ public class KarnaughMap
      *  </tr>
      * </table>
      * 
-     * <p>Sendo "abc" e "de" os nomes das variaveis escolhidos. E os numeros
+     * <p>Sendo "abc" e "de" os nomes escolhidos para as variaveis, e os numeros
      * decimais os representantes de cada mintermo.</p>
      */
 
@@ -1173,6 +1173,152 @@ public class KarnaughMap
             {
                 printGroup(groupsTable.table[i]);
             }
+        }
+    }
+    
+    /**
+     *Imprime o mapa de Karnaugh no seguinte formato:
+     * 
+     * <p></p>
+     * <p></p>
+     * 
+     * <table>
+     *  <tr>
+     *      <td>abc\de</td> <td>00</td> <td>01</td> <td>11</td> <td>10</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>000</td> <td>0</td> <td>1</td> <td>3</td> <td>2</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>001</td> <td>4</td> <td>5</td> <td>7</td> <td>6</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>011</td> <td>12</td> <td>13</td> <td>15</td> <td>14</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>010</td> <td>8</td> <td>9</td> <td>11</td> <td>10</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>110</td> <td>24</td> <td>25</td> <td>27</td> <td>26</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>111</td> <td>28</td> <td>29</td> <td>31</td> <td>30</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>101</td> <td>20</td> <td>21</td> <td>23</td> <td>22</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>100</td> <td>16</td> <td>17</td> <td>19</td> <td>18</td>
+     *  </tr>
+     * </table>
+     * 
+     * <p>Sendo "abc" e "de" os nomes escolhidos para as variaveis, e os numeros
+     * decimais os representantes de cada mintermo. Cada um destes sera'
+     * substituido pelo valor ' ', se nao pertencer ao grupo, ou '1' caso contrario.</p>
+     */
+
+    private void printGroupInMap(int groupIndex)
+    {
+        if (groupIndex < groupsTable.numberOfLines)
+        {
+            String line = getVariablesNames();
+            int firstColumnSize = line.length();
+            int numberOfLines = getNumberOfLines();
+            int numberOfColumns = getNumberOfColumns();
+            int numberOfVariablesOfGray2 = getNumberOfVariablesOfGray2();
+            int[] group = groupsTable.table[groupIndex].mintermsAsDecimal;
+            char minterm;
+            
+            line += getHeaderGraySequence();
+            
+            IO.println(line + "\n");
+            
+            for (int i = 0; i < numberOfLines; i++)
+            {
+                line = Strings.centerStrOnABlock
+                        (
+                            TableLine.getBinaryRepresentation(graySequence1[i]),
+                            firstColumnSize
+                        );
+
+                for (int j = 0; j < numberOfColumns; j++)
+                {
+                	minterm = ( Array.contains(convertTo1D(i, j), group) ? mintermsMap[i][j] : ' ' );
+                    line += " " + Strings.centerStrOnABlock("" + minterm, numberOfVariablesOfGray2);
+                }
+
+                IO.println(line);
+            }
+        }
+    }
+    
+    /**
+     *Imprime todos os grupos formados no mapa de Karnaugh no seguinte formato:
+     * 
+     * <p></p>
+     * <p></p>
+     * 
+     * <table>
+     *  <tr>
+     *      <td>abc\de</td> <td>00</td> <td>01</td> <td>11</td> <td>10</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>000</td> <td>0</td> <td>1</td> <td>3</td> <td>2</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>001</td> <td>4</td> <td>5</td> <td>7</td> <td>6</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>011</td> <td>12</td> <td>13</td> <td>15</td> <td>14</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>010</td> <td>8</td> <td>9</td> <td>11</td> <td>10</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>110</td> <td>24</td> <td>25</td> <td>27</td> <td>26</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>111</td> <td>28</td> <td>29</td> <td>31</td> <td>30</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>101</td> <td>20</td> <td>21</td> <td>23</td> <td>22</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>100</td> <td>16</td> <td>17</td> <td>19</td> <td>18</td>
+     *  </tr>
+     * </table>
+     * 
+     * <p>Sendo "abc" e "de" os nomes escolhidos para as variaveis, e os numeros
+     * decimais os representantes de cada mintermo. Cada um destes sera'
+     * substituido pelo valor ' ', se nao pertencer ao grupo, ou o valor correspondente
+     * se pertencer ('1' ou 'x').</p>
+     */
+
+    public void printGroupsInMap()
+    {
+        if (hasGraySequences() && hasVariablesNames())
+        {
+        	for (int i = 0; i < groupsTable.numberOfLines; i++)
+        	{
+        		printGroupInMap(i);
+        		IO.println("");
+        	}
         }
     }
     
