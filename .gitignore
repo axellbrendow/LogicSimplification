@@ -1,5 +1,6 @@
 build/
 private/
+bin/
 /KarnaughMap/dist/
 /QuineMcCluskey/dist/
 /QuineMcCluskeyArquivoUnico/dist/
