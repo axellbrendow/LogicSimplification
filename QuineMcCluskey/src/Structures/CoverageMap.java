@@ -189,19 +189,22 @@ public class CoverageMap
 
     private MintermTable getTableOfLinesOfPrimeImplicantsForEachMinterm()
     {
-        MintermTable tableOfLinesOfPrimeImplicantsForEachMinterm = new MintermTable(mintermsMap.length);
+        int numberOfColumns = getNumberOfColumns();
+        MintermTable tableOfLinesOfPrimeImplicantsForEachMinterm = new MintermTable(numberOfColumns);
         int[] linesOfPrimeImplicantsForCurrentMinterm = new int[mintermsMap.length];
         int linesOfPrimeImplicantsForCurrentMintermCounter;
         int[] definitiveLinesOfPrimeImplicantsForCurrentMinterm;
         char c;
 
-        for (int j = 0; j < mintermsMap[0].length; j++)
+        // Percorre as colunas. Cada coluna representa um mintermo.
+        for (int j = 0; j < numberOfColumns; j++)
         {
             linesOfPrimeImplicantsForCurrentMintermCounter = 0;
 
+            // Percorre as linhas. Juntamente com o for acima, forma um movimento vertical
             for (int i = 0; i < mintermsMap.length && ( c = mintermsMap[i][j] ) != '|'; i++)
             {
-                if (c == 'x')
+                if (c == 'x') // Checa se existe um x na coluna do mintermo
                 {
                     linesOfPrimeImplicantsForCurrentMinterm[linesOfPrimeImplicantsForCurrentMintermCounter++] = i;
                 }
@@ -209,6 +212,8 @@ public class CoverageMap
 
             if (linesOfPrimeImplicantsForCurrentMintermCounter > 0)
             {
+                // Cria o arranjo definitivo que terá os índices das linhas dos
+                // primos implicantes essenciais para o mintermo na coluna atual
                 definitiveLinesOfPrimeImplicantsForCurrentMinterm = new int[linesOfPrimeImplicantsForCurrentMintermCounter];
                 System.arraycopy(linesOfPrimeImplicantsForCurrentMinterm, 0, definitiveLinesOfPrimeImplicantsForCurrentMinterm, 0, linesOfPrimeImplicantsForCurrentMintermCounter);
 
