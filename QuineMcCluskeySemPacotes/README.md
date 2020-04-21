@@ -1,7 +1,7 @@
 ### Observações sobre ambiente
 
 Este projeto foi feito usando a IDE Eclipse com Java 8+, basta abrir a pasta QuineMcCluskeySemPacotes como projeto na IDE e tudo estará OK.
-Caso queira usar o VSCode, é possível, basta também abrir a pasta QuineMcCluskeySemPacotes nele. É importante que seja ela e não a pasta do repositório inteiro (LogicSimplification).
+Caso queira usar o VSCode, é possível também, basta abrir a pasta QuineMcCluskeySemPacotes nele. É importante que seja ela e não a pasta do repositório inteiro (LogicSimplification).
 
 ### Como usar ?
 
