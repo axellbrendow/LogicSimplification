@@ -1,5 +1,3 @@
-
-
 import java.util.Arrays;
 
 /**
@@ -8,8 +6,6 @@ import java.util.Arrays;
 
 public class Array
 {
-
-    
     /**
      * Percorre o arranjo procurando o seu maior elemento.
      * 

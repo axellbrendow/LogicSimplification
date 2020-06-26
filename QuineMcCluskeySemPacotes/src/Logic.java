@@ -1,5 +1,3 @@
-
-
 /**
  * @author Axell Brendow ( https://github.com/axell-brendow )
  */

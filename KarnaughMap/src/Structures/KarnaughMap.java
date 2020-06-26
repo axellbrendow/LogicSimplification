@@ -251,11 +251,7 @@ public class KarnaughMap
     
     /**
      * Neste metodo ja' e' implementada a ideia do mapa de Karnaugh de uma unica
-     * dimensao, um arranjo. Fornecido o indice ({@code mintermIndex}) de um
-     * mintermo <b>base</b> e uma referencia ({@code nthHD1Minterm}) para qual
-     * dos mintermos que faz distancia hamming de 1 com o <b>base</b> deve ser
-     * obtido, o metodo retorna o indice, no mapa de Karnaugh, do mintermo que
-     * faz distancia hamming de 1 com o <b>base</b>.
+     * dimensao, um arranjo.
      * 
      * <p>Ilustracao:</p>
      * <p>Mapa de Karnaugh bidimensional:</p>
@@ -287,17 +283,20 @@ public class KarnaughMap
      *  <li>10</li>
      * </ul>
      * 
-     * <p>Dessa forma, ao executar getMintermThatDoesHD1With(0, 1), voce esta
-     * buscando o indice do segundo mintermo que faz distancia hamming de 1 com
-     * o mintermo no indice 0. No contexto criado, o mintermo no indice 0 e' o
-     * 00 e o primeiro mintermo que faz distancia hamming de 1 com ele e' o
-     * ultimo da sequencia de gray (10), ou seja, a funcao retornaria 3, que e'
-     * o indice dele. Como a sequencia de gray tem apenas 2 bits, cada mintermo
-     * tem apenas 2 outros mintermos que fazem distancia hamming de 1 com ele.</p>
+     * <p>Dessa forma, ao executar {@code getMintermThatDoesHD1With(0, 1)}, voce
+     * esta considerando o mintermo no índice 0, ou seja, o "00" como o mintermo
+     * <b>base</b> e voce está buscando o segundo mintermo (1 + 1) que faz distancia
+     * hamming de 1 com o mintermo <b>base</b>. No contexto criado, o primeiro
+     * mintermo que faz distancia hamming de 1 com o <b>base</b> e' o ultimo da
+     * sequencia de gray "10". Já o segundo é o segundo da sequência de gray "01",
+     * ou seja, a funcao retornaria 1, que e' o indice dele.</p>
      * 
      * @param mintermIndex indice do mintermo <b>base</b>
-     * @param nthHD1Minterm referencia para qual dos mintermos que faz distancia
-     * hamming de 1 com o <b>base</b> deve ser obtido
+     * @param nthHDMinterm referencia para qual dos mintermos que faz distancia
+     * hamming de 1 com o <b>base</b> deve ser escolhido. <p></p>
+     * (Veja a documentação deste campo para entender melhor
+     * {@link TableLine#nthHDMinterms} ou a documentação desta função
+     * {@link #getMintermThatDoesHD1With(int, int)})
      * 
      * @return Indice do mintermo que faz distancia hamming de 1 com o mintermo
      * <b>base</b>.
@@ -333,7 +332,10 @@ public class KarnaughMap
      * 
      * @param mintermIndex indice do mintermo <b>base</b>
      * @param nthHDMinterm referencia para qual dos mintermos que fazem
-     * distancia hamming com o mintermo <b>base</b> deve ser procurado
+     * distancia hamming com o mintermo <b>base</b> deve ser procurado <p></p>
+     * (Veja a documentação deste campo para entender melhor
+     * {@link TableLine#nthHDMinterms} ou a documentação desta função
+     * {@link #getMintermThatDoesHD1With(int, int)})
      * 
      * @return Indice do mintermo que faz distancia hamming com o mintermo no
      * indice {@code mintermIndex}.
@@ -396,6 +398,26 @@ public class KarnaughMap
     
     private int[] getIndexesOfHD2MintermsOf(int mintermIndex)
     {
+        /*
+        A lógica dessa função basicamente é a seguinte:
+
+        Considerando três mintermos distintos A, B e C,
+        se A faz HD1 (Hamming Distance 1) com B e B faz HD1 com C,
+        A faz HD2 com C.
+
+        Exemplo:
+        A = "00"
+        B = "01"
+        C = "11"
+        A faz HD1 com B ("0_").
+        B faz HD1 com C ("_1").
+        A faz HD2 com C ("__").
+
+        Usando essa ideia, eu descubro os mintermos que fazem HD1 com o mintermo
+        no mintermIndex e daí eu descubro os mintermos que fazem HD1 com esses
+        mintermos. Tendo eles consigo saber que eles são os mintermos que fazem
+        HD2 com o mintermo no índice mintermIndex.
+        */
         int[] indexesOfHD1Minterms = getIndexesOfHD1MintermsOf(mintermIndex);
         int[] indexesOfHD2Minterms = new int[getNumberOfHD2Minterms()];
         Arrays.fill(indexesOfHD2Minterms, -1);
@@ -472,13 +494,16 @@ public class KarnaughMap
      * preenchidas com valores -1.</p>
      * 
      * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingMode) da classe
-     * KarnaughMap.</p>
+     * do parametro passado para o metodo {@link #groupMinterms(GroupingMode)} da
+     * classe {@link KarnaughMap}.</p>
      * 
      * @param mintermsGroup arranjo de indices dos mintermos participantes do
      * grupo
      * @param nthHDMinterm referencia para qual dos mintermos que faz distancia
-     * hamming com cada mintermo do grupo deve ser procurado
+     * hamming com cada mintermo do grupo deve ser procurado <p></p>
+     * (Veja a documentação deste campo para entender melhor
+     * {@link TableLine#nthHDMinterms} ou a documentação desta função
+     * {@link #getMintermThatDoesHD1With(int, int)})
      * 
      * @return {@code mintermsGroup} caso algum dos mintermos do grupo nao tenha
      * o mintermo que faz distancia hamming com ele. Caso contrario, retorna um
@@ -537,21 +562,21 @@ public class KarnaughMap
         return numberOfNotUsedMinterms;
     }*/
     
-    private int countDontCares(TableLine mintermsGroup)
-    {
-        int dontCaresCount = 0;
-        int[] mintermsIndexes = mintermsGroup.mintermsAsDecimal;
+    // private int countDontCares(TableLine mintermsGroup)
+    // {
+    //     int dontCaresCount = 0;
+    //     int[] mintermsIndexes = mintermsGroup.mintermsAsDecimal;
         
-        for (int i = 0; i < mintermsIndexes.length; i++)
-        {
-            if (mintermIsADontCare(mintermsIndexes[i]))
-            {
-                dontCaresCount++;
-            }
-        }
+    //     for (int i = 0; i < mintermsIndexes.length; i++)
+    //     {
+    //         if (mintermIsADontCare(mintermsIndexes[i]))
+    //         {
+    //             dontCaresCount++;
+    //         }
+    //     }
         
-        return dontCaresCount;
-    }
+    //     return dontCaresCount;
+    // }
     
     private boolean variationIsLessThan(int maxVariation, int num1, int num2)
     {
@@ -575,8 +600,8 @@ public class KarnaughMap
         int numberOfSimplificationsOfGroup2 = group2.getNumberOfNthHDMinterms();/*
         int numberOfNotUsedMintermsOfGroup1 = getNumberOfNotUsedMinterms(group1.mintermsAsDecimal);
         int numberOfNotUsedMintermsOfGroup2 = getNumberOfNotUsedMinterms(group2.mintermsAsDecimal);*/
-        int effectiveSizeOfGroup1 = group1.getNumberOfElements() - countDontCares(group1);
-        int effectiveSizeOfGroup2 = group2.getNumberOfElements() - countDontCares(group2);
+        // int effectiveSizeOfGroup1 = group1.getNumberOfElements() - countDontCares(group1);
+        // int effectiveSizeOfGroup2 = group2.getNumberOfElements() - countDontCares(group2);
         int pointsOfGroup1 = 0;
         int pointsOfGroup2 = 0;
         
@@ -613,15 +638,15 @@ public class KarnaughMap
             pointsOfGroup2 += 30;
         }*/
         
-        if (effectiveSizeOfGroup1 > effectiveSizeOfGroup2)
-        {
-            pointsOfGroup1 += 30;
-        }
+        // if (effectiveSizeOfGroup1 > effectiveSizeOfGroup2)
+        // {
+        //     pointsOfGroup1 += 30;
+        // }
         
-        else if (effectiveSizeOfGroup2 > effectiveSizeOfGroup1)
-        {
-            pointsOfGroup2 += 30;
-        }
+        // else if (effectiveSizeOfGroup2 > effectiveSizeOfGroup1)
+        // {
+        //     pointsOfGroup2 += 30;
+        // }
         
         if (pointsOfGroup2 > pointsOfGroup1)
         {
@@ -631,6 +656,57 @@ public class KarnaughMap
         return bestGroup;
     }
     
+    /**
+     * Tenta pegar um grupo existente de mintermos e expandi-lo. A operação de
+     * reflexão é exatamente uma operação onde tenta-se descobrir se existe um
+     * outro grupo no mapa que seja equivalente ao existente e se é possível
+     * fundi-los num grupo só.
+     * 
+     * <p></p>
+     * 
+     * Explicando um pouco melhor:
+     * 
+     * <p></p>
+     * 
+     * Imagine o seguinte mapa:
+     * 
+     * <table>
+     *  <tr>
+     *      <td>ab\de</td> <td>00</td> <td>01</td> <td>11</td> <td>10</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>00</td> <td>1</td> <td>1</td> <td>0</td> <td>0</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>01</td> <td>0</td> <td>0</td> <td>0</td> <td>0</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>11</td> <td>0</td> <td>0</td> <td>0</td> <td>0</td>
+     *  </tr>
+     * 
+     *  <tr>
+     *      <td>10</td> <td>1</td> <td>1</td> <td>0</td> <td>0</td>
+     *  </tr>
+     * </table>
+     * 
+     * Se o {@code baseGroup} atual for { '0000', '0001' }, é possível notar que
+     * existe um outro grupo equivalente { '1000', '1001' } no mapa e que na verdade
+     * se refletir-mos o {@code baseGroup} para a parte de baixo, os dois grupos
+     * se encaixam perfeitamente. Isso indica que na verdade, eles podem ser um
+     * grupo único.
+     * 
+     * @param baseGroup Grupo existente de mintermos.
+     * @param nthHDMinterm referencia para qual dos mintermos que faz distancia
+     * hamming com cada mintermo do grupo deve ser procurado <p></p>
+     * (Veja a documentação deste campo para entender melhor
+     * {@link TableLine#nthHDMinterms} ou a documentação desta função
+     * {@link #getMintermThatDoesHD1With(int, int)})
+     * 
+     * @return
+     */
     private TableLine tryToReflectGroup(TableLine baseGroup, int nthHDMinterm)
     {
         TableLine reflectedGroup = baseGroup;
@@ -668,24 +744,25 @@ public class KarnaughMap
     }
     
     /**
-     * Tenta formar um grupo de mintermos. O primeiro mintermo, <b>base</b>, e'
-     * o mintermo do indice {@code mintermIndex}. O proximo mintermo e'
-     * escolhido de acordo com {@code nthHDMinterm} que indica qual dos
-     * mintermos que faz distancia hamming com o <b>base</b> deve ser escolhido.
-     * Para um mapa de Karnaugh de <b>n</b> variaveis, todos mintermos tem
+     * Tenta formar o maior grupo de mintermos possivel a partir da tentativa
+     * de aumentar o {@code group} recebido.
+     * 
+     * <p>Para um mapa de Karnaugh de <b>n</b> variaveis, todos mintermos tem
      * <b>n</b> outros mintermos que fazem distancia hamming de 1 com eles. Da
      * mesma forma, todos os mintermos tem C(<b>n</b>, 2) (combinacao de
      * <b>n</b> tomados 2 a 2) outros mintermos que fazem distancia hamming de
-     * 2 com eles.
+     * 2 com eles.</p>
      * 
      * <p>Obs.: a decisao entre distancia hamming de 1 ou de 2 fica a cargo
-     * do parametro passado para o metodo groupMinterms(GroupingMode) da classe
-     * KarnaughMap.</p>
+     * do parametro passado para o metodo {@link #groupMinterms(GroupingMode)} da
+     * classe {@link KarnaughMap}.</p>
      * 
-     * @param mintermLine linha do primeiro mintermo do grupo
-     * @param mintermColumn coluna do primeiro mintermo do grupo
-     * @param nthHDMinterm qual dos mintermos que faz distancia hamming com o
-     * mintermo <b>base</b> deve ser o segundo ponto de partida
+     * @param nthHDMinterm referencia para qual dos mintermos que faz distancia
+     * hamming com cada mintermo do grupo deve ser procurado <p></p>
+     * (Veja a documentação deste campo para entender melhor
+     * {@link TableLine#nthHDMinterms} ou a documentação desta função
+     * {@link #getMintermThatDoesHD1With(int, int)})
+     * @param group Grupo inicial de mintermos que deseja-se expandir.
      * 
      * @return O maior grupo que pode ser formado com o mintermo base, partindo
      * da referencia {@code nthHDMinterm}.
@@ -711,19 +788,12 @@ public class KarnaughMap
     }
     
     /**
-     * Tenta formar o melhor grupo de mintermos possivel sendo o mintermo da
-     * linha {@code mintermLine} e coluna {@code mintermColumn} o primeiro
-     * deles.
+     * Tenta formar o melhor grupo de mintermos possivel a partir da tentativa
+     * de aumentar o {@code group} recebido.
      * 
-     * @param mintermLine linha do primeiro mintermo do grupo
-     * @param mintermColumn coluna do primeiro mintermo do grupo
+     * @param group Grupo inicial de mintermos que deseja-se expandir.
      * 
-     * @return {@code TableLine} em que o arranjo {@code mintermsAsDecimal} tem
-     * os indices, no mapa de Karnaugh unidimensional, de todos os mintermos
-     * participantes do grupo. Alem disso, o arranjo {@code nthHDMinterms} tera'
-     * as referencias para todos os mintermos que fazem distancia hamming com o
-     * mintermo base do grupo e que foram usados nas reflexoes do grupo pelo
-     * mapa.
+     * @return maior grupo que pode ser formado a partir do {@code group} recebido.
      */
     
     private TableLine getBestGroupReflectingAsManyAsPossible(TableLine group)
@@ -747,9 +817,9 @@ public class KarnaughMap
      * @param mintermLine linha do primeiro mintermo do grupo
      * @param mintermColumn coluna do primeiro mintermo do grupo
      * 
-     * @return {@code TableLine} em que o arranjo {@code mintermsAsDecimal} tem
-     * os indices, no mapa de Karnaugh unidimensional, de todos os mintermos
-     * participantes do grupo. Alem disso, o arranjo {@code mintermAsBinary}
+     * @return {@link TableLine} em que o arranjo {@link TableLine#mintermsAsDecimal}
+     * tem os indices, no mapa de Karnaugh unidimensional, de todos os mintermos
+     * participantes do grupo. Alem disso, o arranjo {@link TableLine#mintermAsBinary}
      * tera' o resultado da simplificacao na forma binaria.
      */
     
@@ -960,7 +1030,7 @@ public class KarnaughMap
         for (int i = 0; i < numberOfColumns; i++)
         {
             headerGraySequence += " " +
-                    Strings.centerStrOnABlock
+                    Strings.center
                     (
                         TableLine.getBinaryRepresentation(graySequence2[i]),
                         numberOfVariablesOfGray2
@@ -1035,7 +1105,7 @@ public class KarnaughMap
             
             for (int i = 0; i < numberOfLines; i++)
             {
-                line = Strings.centerStrOnABlock
+                line = Strings.center
                         (
                             TableLine.getBinaryRepresentation(graySequence1[i]),
                             firstColumnSize
@@ -1043,7 +1113,7 @@ public class KarnaughMap
 
                 for (int j = 0; j < numberOfColumns; j++)
                 {
-                    line += " " + Strings.centerStrOnABlock("" + mintermsMap[i][j], numberOfVariablesOfGray2);
+                    line += " " + Strings.center("" + mintermsMap[i][j], numberOfVariablesOfGray2);
                 }
 
                 IO.println(line);
@@ -1115,7 +1185,7 @@ public class KarnaughMap
             
             for (int i = 0; i < numberOfLines; i++)
             {
-                line = Strings.centerStrOnABlock
+                line = Strings.center
                         (
                             TableLine.getBinaryRepresentation(graySequence1[i]),
                             firstColumnSize
@@ -1124,7 +1194,7 @@ public class KarnaughMap
                 for (int j = 0; j < numberOfColumns; j++)
                 {
                     line += " " +
-                            Strings.centerStrOnABlock
+                            Strings.center
                             (
                                 "" + decimalMintermsMap[i][j],
                                 numberOfVariablesOfGray2
@@ -1428,7 +1498,7 @@ public class KarnaughMap
     }
     
     /**
-     *Imprime o mapa de Karnaugh no seguinte formato:
+     * Imprime o mapa de Karnaugh no seguinte formato:
      * 
      * <p></p>
      * <p></p>
@@ -1474,6 +1544,8 @@ public class KarnaughMap
      * <p>Sendo "abc" e "de" os nomes escolhidos para as variaveis, e os numeros
      * decimais os representantes de cada mintermo. Cada um destes sera'
      * substituido pelo valor ' ', se nao pertencer ao grupo, ou '1' caso contrario.</p>
+     * 
+     * @param groupIndex índice do grupo na {@link #groupsTable} que deve ser imprimido.
      */
 
     private void printGroupInMap(int groupIndex)
@@ -1494,7 +1566,7 @@ public class KarnaughMap
             
             for (int i = 0; i < numberOfLines; i++)
             {
-                line = Strings.centerStrOnABlock
+                line = Strings.center
                         (
                             TableLine.getBinaryRepresentation(graySequence1[i]),
                             firstColumnSize
@@ -1503,7 +1575,7 @@ public class KarnaughMap
                 for (int j = 0; j < numberOfColumns; j++)
                 {
                 	minterm = ( Array.contains(convertTo1D(i, j), group) ? mintermsMap[i][j] : ' ' );
-                    line += " " + Strings.centerStrOnABlock("" + minterm, numberOfVariablesOfGray2);
+                    line += " " + Strings.center("" + minterm, numberOfVariablesOfGray2);
                 }
 
                 IO.println(line);
@@ -1557,8 +1629,8 @@ public class KarnaughMap
      * 
      * <p>Sendo "abc" e "de" os nomes escolhidos para as variaveis, e os numeros
      * decimais os representantes de cada mintermo. Cada um destes sera'
-     * substituido pelo valor ' ', se nao pertencer ao grupo, ou o valor correspondente
-     * se pertencer ('1' ou 'x').</p>
+     * substituido pelo valor ' ', se nao pertencer ao grupo, ou o valor decimal
+     * correspondente se pertencer.</p>
      */
 
     public void printGroupsInMap()

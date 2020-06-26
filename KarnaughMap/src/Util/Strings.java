@@ -17,14 +17,11 @@ public class Strings
     
     public static String createClonesAndConcatThem(String str, int numberOfClones)
     {
-        String clones = "";
+        StringBuilder stringBuilder = new StringBuilder("");
+
+        for (int i = 0; i < numberOfClones; i++) stringBuilder.append(str);
         
-        for (int i = 0; i < numberOfClones; i++)
-        {
-            clones += str;
-        }
-        
-        return clones;
+        return stringBuilder.toString();
     }
     
     /**
@@ -41,7 +38,7 @@ public class Strings
      * nela.
      */
     
-    public static String centerStrOnABlock(String str, int blockSize)
+    public static String center(String str, int blockSize)
     {
         blockSize -= str.length();
         int paddingLeft = blockSize / 2;

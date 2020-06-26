@@ -21,7 +21,7 @@ public class QuineMcCluskey
                 "\nEntre com a tabela verdade\n" +
                 "(ex: \"1101\" representa os mintermos 0, 1 e 3): ");
         // Le os nomes das variaveis do circuito
-        String variablesNames = IO.readLine("Entre com os nomes de cada variavel (ex: \"a b c d\"): ");
+        String variablesNames = IO.readLine("\nEntre com os nomes de cada variavel (ex: \"a b c d\"): ");
         String[] namesOfVariables = variablesNames.split(" ");
         
         // Extrai os mintermos e cria uma tabela para eles
