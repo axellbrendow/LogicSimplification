@@ -184,14 +184,11 @@ public class Array
     
     public static String toString(char[] array)
     {
-        String str = "";
+        StringBuilder stringBuilder = new StringBuilder("");
         
-        for (int i = 0; i < array.length; i++)
-        {
-            str += array[i];
-        }
+        for (int i = 0; i < array.length; i++) stringBuilder.append(array[i]);
         
-        return str;
+        return stringBuilder.toString();
     }
     
     /**

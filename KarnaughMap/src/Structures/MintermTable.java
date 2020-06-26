@@ -156,18 +156,19 @@ public class MintermTable
     }
     
     /**
-     * Percorre todas as linhas da tabela pegando as representacoes em
-     * binario e adicionando nas linhas de uma matriz.
+     * Percorre todas as linhas da tabela {@link #table} pegando as representacoes
+     * em binario de cada linha. Daí cria uma matriz onde cada linha é a
+     * representação em binário das linhas de {@link #table}.
      * 
      * <p>Ex:</p>
      * <p>Tabela atual:</p>
-     * <p>{ 3 } 110 // little endian</p>
+     * <p>{ 3 } 110 // little endian (O 3 está invertido)</p>
      * <p>{ 5 } 101</p>
      * 
      * <p></p>
      * 
-     * <p>Matriz_gerada[0] = { '1', '1', '0' }</p>
-     * <p>Matriz_gerada[1] = { '1', '0', '1' }</p>
+     * <p>matrizGerada[0] = { '1', '1', '0' }</p>
+     * <p>matrizGerada[1] = { '1', '0', '1' }</p>
      * 
      * @return Matriz com as representacoes em binario de cada linha da tabela
      */
