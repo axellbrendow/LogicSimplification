@@ -3,5 +3,5 @@ Repositório criado com a intenção de trazer algumas utilidades para a simplif
 
 ## Algoritmos de simplificação
 
-- [KarnaughMap](https://github.com/axell-brendow/LogicSimplification/tree/master/KarnaughMap#readme)
+- [Karnaugh Map](https://github.com/axell-brendow/LogicSimplification/tree/master/KarnaughMap#readme)
 - [Quine McCluskey](https://github.com/axell-brendow/LogicSimplification/tree/master/QuineMcCluskey#readme)
